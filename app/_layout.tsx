@@ -4,7 +4,7 @@ export default function RootLayout() {
   return (
     <Stack
       screenOptions={{
-        headerShown: false, // Це прибере верхній заголовок [cite: 2026-01-24]
+        headerShown: false,
       }}
     >
       <Stack.Screen name="(tabs)" />

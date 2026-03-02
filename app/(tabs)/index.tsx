@@ -1,69 +1,148 @@
-import { Link } from "expo-router";
-import { StyleSheet, Text, View, Image, Dimensions } from "react-native";
+import { Colors } from "@/constants/Colors";
+import React, { useState } from "react";
+import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import ScreenContainer from "@/components/ScreenContainer";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
-// Отримуємо ширину екрана, щоб картка була адаптивною [cite: 2026-01-24]
-const { width } = Dimensions.get("window");
+export default function FiltersScreen() {
+  // Створюємо стан для вибору статі [cite: 2026-01-24]
+  const [gender, setGender] = useState("woman");
 
-export default function HomeScreen() {
   return (
-    <View style={styles.container}>
+    <ScreenContainer>
+      <Text style={styles.header}>Find your match...</Text>
+
       <View style={styles.card}>
-        <Image
-          source={{
-            uri: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400&h=600&auto=format&fit=crop",
-          }}
-          style={styles.image}
-        />
-        <View style={styles.info}>
-          <Text style={styles.name}>Олена, 24</Text>
-          <Text style={styles.bio}>
-            Люблю подорожі, каву та React Native 🚀. Шукаю когось для спільного
-            кодингу!
-          </Text>
+        <Text style={styles.label}>Gender</Text>
+
+        <View style={styles.buttonGroup}>
+          {/* Кнопка "Woman" [cite: 2026-01-24] */}
+          <TouchableOpacity
+            style={[styles.option, gender === "woman" && styles.selectedOption]}
+            onPress={() => setGender("woman")}
+          >
+            <MaterialCommunityIcons
+              name="face-woman-shimmer"
+              size={30}
+              color={gender === "woman" ? Colors.white : Colors.secondary}
+            />
+            {/* <Text
+              style={[
+                styles.optionText,
+                gender === "woman" && styles.selectedText,
+              ]}
+            >
+              Woman
+            </Text> */}
+          </TouchableOpacity>
+
+          {/* Кнопка "Man" [cite: 2026-01-24] */}
+          <TouchableOpacity
+            style={[styles.option, gender === "man" && styles.selectedOption]}
+            onPress={() => setGender("man")}
+          >
+            <MaterialCommunityIcons
+              name="face-man-shimmer"
+              size={30}
+              color={gender === "man" ? Colors.white : Colors.primary}
+            />
+            {/* <Text
+              style={[
+                styles.optionText,
+                gender === "man" && styles.selectedText,
+              ]}
+            >
+              Man
+            </Text> */}
+          </TouchableOpacity>
+
+          {/* Кнопка "Both" [cite: 2026-01-24] */}
+          <TouchableOpacity
+            style={[styles.option, gender === "both" && styles.selectedOption]}
+            onPress={() => setGender("both")}
+          >
+            <Ionicons
+              name="people-outline"
+              size={30}
+              fontWeight="bold"
+              color={gender === "both" ? Colors.white : Colors.textMain}
+            />
+            {/* <Text
+              style={[
+                styles.optionText,
+                gender === "both" && styles.selectedText,
+              ]}
+            >
+              Both
+            </Text> */}
+          </TouchableOpacity>
         </View>
       </View>
-      <Link href="/about">Link to about section</Link>
-    </View>
+
+      <TouchableOpacity style={styles.applyButton}>
+        <Text style={styles.applyButtonText}>Save & Search</Text>
+      </TouchableOpacity>
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#f0f2f5", // Світло-сірий фон [cite: 2026-01-24]
+  header: {
+    fontSize: 26,
+    fontWeight: "bold",
+    color: Colors.textMain,
+    marginBottom: 20,
   },
   card: {
-    width: width * 0.9, // 90% від ширини екрана [cite: 2026-01-24]
-    height: 550,
-    borderRadius: 25,
-    backgroundColor: "white",
-    overflow: "hidden",
-    // Тіні для гарного вигляду (basically, як у Tinder) [cite: 2026-01-24]
-    elevation: 8, // для Android [cite: 2026-01-24]
-    shadowColor: "#000", // для iOS [cite: 2026-01-24]
-    shadowOpacity: 0.15,
-    shadowRadius: 15,
-    shadowOffset: { width: 0, height: 10 },
-  },
-  image: {
-    width: "100%",
-    height: "75%", // Фото займає більшу частину картки [cite: 2026-01-24]
-    resizeMode: "cover",
-  },
-  info: {
+    backgroundColor: Colors.white,
     padding: 20,
+    borderRadius: 20,
+    shadowColor: Colors.shadow,
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
   },
-  name: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#1a1a1a",
-  },
-  bio: {
+  label: {
     fontSize: 16,
-    color: "#666",
-    marginTop: 8,
-    lineHeight: 22,
+    color: Colors.textMain,
+    marginBottom: 15,
+    fontWeight: "600",
+  },
+  buttonGroup: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  option: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: Colors.background, // Блакитний контур [cite: 2026-01-24]
+    alignItems: "center",
+  },
+  selectedOption: {
+    backgroundColor: Colors.primary, // Активний блакитний колір [cite: 2026-01-24]
+    borderColor: Colors.primary,
+  },
+  optionText: {
+    color: Colors.primary,
+    fontWeight: "bold",
+  },
+  selectedText: {
+    color: Colors.white,
+  },
+  applyButton: {
+    backgroundColor: Colors.secondary, // Рожева кнопка дії [cite: 2026-01-14]
+    paddingVertical: 18,
+    borderRadius: 30,
+    marginTop: "auto",
+    marginBottom: 20,
+    alignItems: "center",
+  },
+  applyButtonText: {
+    color: Colors.white,
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });
