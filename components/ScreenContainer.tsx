@@ -1,33 +1,47 @@
 import React from "react";
 import { StyleSheet, View, ScrollView } from "react-native";
-import { Colors } from "../constants/Colors";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context"; // Використовуємо хук
 
 interface Props {
   children: React.ReactNode;
+  withScroll?: boolean; // Додаємо вибір: скролити чи ні
 }
 
-export default function ScreenContainer({ children }: Props) {
+export default function ScreenContainer({
+  children,
+  withScroll = true,
+}: Props) {
+  const insets = useSafeAreaInsets(); // Отримуємо динамічні відступи
+
+  const containerStyle = [
+    styles.content,
+    {
+      paddingTop: insets.top, // Гнучко додаємо відступ зверху
+      paddingBottom: insets.bottom, // Гнучко додаємо відступ знизу
+    },
+  ];
+
+  if (!withScroll) {
+    return <View style={containerStyle}>{children}</View>;
+  }
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.content}>{children}</View>
-      </ScrollView>
-    </SafeAreaView>
+    <ScrollView
+      contentContainerStyle={styles.scrollContent}
+      // Щоб скрол не заходив під нижню панель
+      style={{ flex: 1 }}
+    >
+      <View style={containerStyle}>{children}</View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: Colors.background, // Твій світло-блакитний фон [cite: 2026-01-24]
-  },
   scrollContent: {
     flexGrow: 1,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20, // Відступи з боків [cite: 2026-01-24]
-    paddingTop: 20, // Відступ зверху [cite: 2026-01-24]
+    paddingHorizontal: 20,
   },
 });
