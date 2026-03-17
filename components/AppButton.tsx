@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     width: "100%",
     marginVertical: 10,
     // Тіні для солідного вигляду (Web + iOS + Android) [cite: 2026-01-14]
-    shadowColor: "#000",
+    shadowColor: Colors.shadow,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 5,
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     marginRight: 5,
   },
   text: {
-    fontWeight: "bold",
+    fontFamily: "Raleway", // Використовуємо кастомний шрифт [cite: 2026-01-24]
     letterSpacing: 0.5,
   },
 });

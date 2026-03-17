@@ -1,15 +1,24 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Platform } from "react-native";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient"; // Найкраще для фону "захід сонця" [cite: 2026-01-14]
 import { Ionicons } from "@expo/vector-icons";
-
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
+import { IconDefinition, library } from "@fortawesome/fontawesome-svg-core";
+import { fas } from "@fortawesome/free-solid-svg-icons";
 import AppButton from "@/components/AppButton";
 import { Colors } from "@/constants/Colors";
+import Slider from "@react-native-community/slider";
+
+const iconList = Object.values(fas) as IconDefinition[];
+
+library.add(...iconList);
 
 export default function FiltersScreen() {
   const insets = useSafeAreaInsets(); // Отримуємо точні відступи системи [cite: 2026-01-24]
+
   const [gender, setGender] = useState<"male" | "female" | "all">("all");
+  const [distance, setDistance] = useState(10);
 
   return (
     <View style={styles.container}>
@@ -33,7 +42,6 @@ export default function FiltersScreen() {
         {/* Картка з використанням Glassmorphism ефекту */}
         <View style={styles.card}>
           <Text style={styles.label}>Gender</Text>
-
           <View style={styles.genderRow}>
             <AppButton
               title="Male"
@@ -74,19 +82,45 @@ export default function FiltersScreen() {
               onPress={() => setGender("all")}
               style={styles.flexButton}
               icon={
-                // <FontAwesomeIcon icon={fas.faHouse} />
-                <Ionicons
-                  name="people-outline"
-                  size={22}
-                  color={gender === "all" ? Colors.white : Colors.textLight}
+                <FontAwesomeIcon
+                  icon={["fas", "users"]}
+                  color={gender === "all" ? Colors.white : "#2140ed"}
                 />
+
+                // <Ionicons
+                //   name="people-outline"
+                //   size={22}
+                //   color={gender === "all" ? Colors.white : Colors.textLight}
+                // />
               }
               textSize={14}
             />
           </View>
 
-          {/* Місце для майбутніх слайдерів [cite: 2026-01-14] */}
-          <View style={styles.placeholder} />
+          {/* Секція для вибору дистанції з слайдером [cite: 2026-01-24] */}
+          <View style={styles.section}>
+            <View style={styles.labelRow}>
+              <Text style={styles.sectionLabel}>Distance</Text>
+              <Text style={styles.valueText}>{distance} km</Text>
+            </View>
+
+            <Slider
+              style={{ width: "100%", height: 40 }}
+              minimumValue={10}
+              maximumValue={100}
+              step={1}
+              value={distance}
+              onValueChange={setDistance}
+              minimumTrackTintColor={Colors.secondary}
+              maximumTrackTintColor="#F0F2F5" // Колір порожньої частини
+              thumbTintColor={Colors.secondary} // Колір самого кружечка
+            />
+
+            <View style={styles.labelRow}>
+              <Text style={styles.subLabel}>10 km</Text>
+              <Text style={styles.subLabel}>100 km</Text>
+            </View>
+          </View>
         </View>
 
         <AppButton
@@ -107,9 +141,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   headerTitle: {
+    fontFamily: "Raleway", // Використовуємо кастомний шрифт [cite: 2026-01-24]
     fontSize: 28,
-    fontWeight: "bold",
-    fontFamily: Platform.OS === "ios" ? "Georgia" : "sans-serif-condensed",
     color: "#1A1F36",
     marginBottom: 24,
     elevation: 4,
@@ -121,7 +154,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 24,
     // Покращені тіні [cite: 2026-01-24]
-    shadowColor: "#000",
+    shadowColor: Colors.shadow,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.05,
     shadowRadius: 15,
@@ -144,8 +177,43 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 46, // Оптимальна висота для тач-зони [cite: 2026-01-14]
   },
-  placeholder: {
-    height: 120, // Простір під слайдери [cite: 2026-01-24]
+  section: {
+    marginBottom: 10,
+    backgroundColor: Colors.white, // Білий фон для "картки"
+    padding: 20,
+    borderRadius: 24,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  labelRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  sectionLabel: {
+    fontFamily: "Raleway",
+    fontSize: 16,
+    color: "#1A1F36",
+  },
+  valueText: {
+    fontSize: 16,
+    fontFamily: "Raleway",
+    color: Colors.secondary, // Рожевий колір для цифр
+  },
+  subLabel: {
+    fontSize: 12,
+    fontFamily: "Raleway",
+    color: Colors.textLight, // Світло-сірий для підписів під бігунцем
+  },
+  // Сам Slider стилізується через пропси, але висоту задаємо тут
+  slider: {
+    width: "100%",
+    height: 40,
+    marginVertical: 12,
   },
 });
 
