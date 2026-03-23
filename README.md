@@ -1,50 +1,43 @@
-# Welcome to your Expo app 👋
+1. Фундамент: Auth & Global State (Зараз)
+   Перш ніж малювати кнопки, треба створити "контейнер" для даних користувача.
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Auth Provider: Створити контекст (AuthContext), який буде стежити: користувач залогінений чи ні.
 
-## Get started
+User Object Model: Визначити, як виглядає твій користувач у базі (наприклад: uid, name, email, gender, preferences: { distance, ageRange }).
 
-1. Install dependencies
+Routing Logic: Налаштувати Expo Router так, щоб неавторизовані користувачі бачили лише Login/Register, а авторизовані — Tabs [cite: 2026-03-18].
 
-   ```bash
-   npm install
-   ```
+2. Екрани входу та реєстрації (Login / Sign Up)
+   Це "ворота" у твій додаток.
 
-2. Start the app
+UI: Використати твій ScreenContainer для створення екранів входу.
 
-   ```bash
-   npx expo start
-   ```
+Validation: Додати перевірку полів (чи пошта схожа на пошту, чи пароль достатньо довгий).
 
-In the output, you'll find options to open the app in a
+Initial Data Setup: При реєстрації одразу створювати пустий профіль у базі даних, щоб потім було куди записувати фільтри.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+3. Профіль та налаштування (Profile Setup)
+   Користувач має розповісти про себе, щоб додаток запрацював.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Edit Profile: Екран, де завантажується фото та заповнюється опис.
 
-## Get a fresh project
+Data Persistence: Навчити додаток зберігати ці дані в базу (Firebase/Supabase), а не просто тримати в пам'яті телефону [cite: 2026-01-14].
 
-When you're ready, run:
+4. Фільтри та вподобання (Твій екран Filters)
+   Тепер, коли ми знаємо, хто користувач, ми можемо зберегти те, кого він шукає.
 
-```bash
-npm run reset-project
-```
+Save Logic: Переробити кнопку "Save & Search", щоб вона відправляла дані в твій AuthContext та в базу даних.
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Default Values: Навчити екран підтягувати раніше збережені значення (щоб щоразу не виставляти вік заново) [cite: 2026-03-18].
 
-## Learn more
+5. Основна логіка (Dating / Swipes)
+   Це "серце" додатка.
 
-To learn more about developing your project with Expo, look at the following resources:
+Matching Algorithm: Запит до бази даних: "Дай мені всіх користувачів, які підпадають під фільтри поточного юзера".
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Cards UI: Реалізація карток для свайпів.
 
-## Join the community
+6. Взаємодія (Matches & Chats)
+   Real-time Listeners: Налаштувати чат так, щоб повідомлення з'являлися миттєво.
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Push Notifications: Сповіщення про нові "метчі".

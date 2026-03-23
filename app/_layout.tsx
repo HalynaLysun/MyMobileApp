@@ -1,8 +1,11 @@
+import { Raleway_700Bold, useFonts } from "@expo-google-fonts/raleway";
 import { Stack } from "expo-router";
-import { useFonts, Raleway_700Bold } from "@expo-google-fonts/raleway";
+import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { AuthProvider } from "@/context/AuthContext";
+
+const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!);
 
 export default function RootLayout() {
-  // Всередині компонента:
   const [fontsLoaded] = useFonts({
     Raleway: Raleway_700Bold,
   });
@@ -10,12 +13,17 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <Stack.Screen name="(tabs)" />
-    </Stack>
+    <ConvexProvider client={convex}>
+      <AuthProvider>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+          }}
+        >
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="(auth)/register" />
+        </Stack>
+      </AuthProvider>
+    </ConvexProvider>
   );
 }

@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   iconContainer: {
-    marginRight: 5,
+    marginRight: 2,
   },
   text: {
     fontFamily: "Raleway", // Використовуємо кастомний шрифт [cite: 2026-01-24]

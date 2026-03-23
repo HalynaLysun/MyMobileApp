@@ -1,6 +1,8 @@
 import React from "react";
+import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, View, ScrollView } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context"; // Використовуємо хук
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Colors } from "@/constants/Colors";
 
 interface Props {
   children: React.ReactNode;
@@ -13,35 +15,63 @@ export default function ScreenContainer({
 }: Props) {
   const insets = useSafeAreaInsets(); // Отримуємо динамічні відступи
 
-  const containerStyle = [
-    styles.content,
-    {
-      paddingTop: insets.top, // Гнучко додаємо відступ зверху
-      paddingBottom: insets.bottom, // Гнучко додаємо відступ знизу
-    },
-  ];
+  const renderContent = () => {
+    const containerStyle = [
+      styles.content,
+      {
+        paddingTop: insets.top,
+        paddingBottom: insets.bottom,
+      },
+    ];
 
-  if (!withScroll) {
-    return <View style={containerStyle}>{children}</View>;
-  }
+    if (!withScroll) {
+      return <View style={containerStyle}>{children}</View>;
+    }
+
+    return (
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        style={{ flex: 1 }}
+      >
+        <View style={containerStyle}>{children}</View>
+      </ScrollView>
+    );
+  };
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.scrollContent}
-      // Щоб скрол не заходив під нижню панель
-      style={{ flex: 1 }}
-    >
-      <View style={containerStyle}>{children}</View>
-    </ScrollView>
+    <View style={styles.container}>
+      {/* Градієнт завжди на фоні */}
+      <LinearGradient
+        colors={[Colors.white, "#E3F2FD"]}
+        style={styles.gradientBackground}
+        locations={[0.1, 1]}
+        start={{ x: 1, y: 0.5 }}
+        end={{ x: 0, y: 0.3 }}
+      />
+
+      {/* ВИКЛИКАЄМО ФУНКЦІЮ ТУТ: */}
+      {renderContent()}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  gradientBackground: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+  },
   scrollContent: {
     flexGrow: 1,
   },
   content: {
     flex: 1,
     paddingHorizontal: 20,
+    backgroundColor: "transparent",
   },
 });

@@ -1,60 +1,71 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient"; // Найкраще для фону "захід сонця" [cite: 2026-01-14]
+import AppButton from "@/components/AppButton";
+import ScreenContainer from "@/components/ScreenContainer";
+import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import { IconDefinition, library } from "@fortawesome/fontawesome-svg-core";
 import { fas } from "@fortawesome/free-solid-svg-icons";
-import AppButton from "@/components/AppButton";
-import { Colors } from "@/constants/Colors";
-import Slider from "@react-native-community/slider";
+// import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
+import MultiSlider from "@ptomasroos/react-native-multi-slider";
+import { useRouter } from "expo-router";
+import { StyleSheet, Text, View } from "react-native";
+import { useAuth } from "@/context/AuthContext";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 
 const iconList = Object.values(fas) as IconDefinition[];
 
 library.add(...iconList);
 
 export default function FiltersScreen() {
-  const insets = useSafeAreaInsets(); // Отримуємо точні відступи системи [cite: 2026-01-24]
+  const { preferences, updatePreferences } = useAuth();
+  const router = useRouter();
 
-  const [gender, setGender] = useState<"male" | "female" | "all">("all");
-  const [distance, setDistance] = useState(10);
+  // Ми використовуємо значення з preferences для відображення в UI
+  const { gender, distance, ageRange, intention } = preferences;
 
+  const update = useMutation(api.users.updateFilters);
+  const { user } = useAuth();
+  const handleSave = async () => {
+    if (!user) {
+      alert("Помилка: користувач не знайдений");
+      return;
+    }
+    try {
+      await update({
+        id: user?.id as Id<"users">, // Тепер TypeScript знайде id
+        gender: preferences.gender, // Звертайся до свого об'єкта preferences
+        distance: preferences.distance,
+        ageRange: preferences.ageRange,
+        intention: preferences.intention,
+      });
+      alert("Налаштування збережено в хмарі! ✨");
+    } catch (err) {
+      alert("Помилка збереження");
+    }
+  };
   return (
-    <View style={styles.container}>
-      {/* М'який градієнт фону замість статичного кольору [cite: 2026-01-14] */}
-      <LinearGradient
-        colors={["#FCE4EC", "#E3F2FD"]} // Від ніжно-блакитного до світло-рожевого [cite: 2026-01-24]
-        locations={[0.1, 1]}
-        start={{ x: 1, y: 0.5 }} // Початок справа (середина по вертикалі) [cite: 2026-01-24]
-        end={{ x: 0, y: 0.5 }}
-        style={StyleSheet.absoluteFill}
-      />
+    <ScreenContainer withScroll={true}>
+      <Text style={styles.headerTitle}>Find your match...</Text>
 
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 20 },
-        ]}
-      >
-        <Text style={styles.headerTitle}>Find your match...</Text>
-
-        {/* Картка з використанням Glassmorphism ефекту */}
-        <View style={styles.card}>
+      {/* Картка з використанням Glassmorphism ефекту */}
+      <View style={styles.card}>
+        <View style={styles.section}>
           <Text style={styles.label}>Gender</Text>
           <View style={styles.genderRow}>
             <AppButton
               title="Male"
               variant="white"
               isActive={gender === "male"}
-              onPress={() => setGender("male")}
+              onPress={() => updatePreferences({ gender: "male" })}
               style={styles.flexButton}
               icon={
-                <Ionicons
-                  name="male"
-                  size={20}
-                  color={gender === "male" ? Colors.white : Colors.primary}
-                />
+                <Text style={{ fontSize: 20 }}>♂️</Text>
+                // <Ionicons
+                //   name="male"
+                //   size={18}
+                //   color={gender === "male" ? Colors.white : Colors.primary}
+                // />
               }
               textSize={14}
             />
@@ -63,14 +74,15 @@ export default function FiltersScreen() {
               title="Female"
               variant="white"
               isActive={gender === "female"}
-              onPress={() => setGender("female")}
+              onPress={() => updatePreferences({ gender: "female" })}
               style={[styles.flexButton, { marginHorizontal: 6 }]}
               icon={
-                <Ionicons
-                  name="female"
-                  size={20}
-                  color={gender === "female" ? Colors.white : Colors.secondary}
-                />
+                <Text style={{ fontSize: 20 }}>♀️</Text>
+                // <Ionicons
+                //   name="female"
+                //   size={18}
+                //   color={gender === "female" ? Colors.white : Colors.secondary}
+                // />
               }
               textSize={14}
             />
@@ -79,13 +91,14 @@ export default function FiltersScreen() {
               title="All"
               variant="white"
               isActive={gender === "all"}
-              onPress={() => setGender("all")}
+              onPress={() => updatePreferences({ gender: "all" })}
               style={styles.flexButton}
               icon={
-                <FontAwesomeIcon
-                  icon={["fas", "users"]}
-                  color={gender === "all" ? Colors.white : "#2140ed"}
-                />
+                <Text style={{ fontSize: 20 }}>⚧️</Text>
+                // <FontAwesomeIcon
+                //   icon={["fas", "users"]}
+                //   color={gender === "all" ? Colors.white : "#2140ed"}
+                // />
 
                 // <Ionicons
                 //   name="people-outline"
@@ -96,52 +109,129 @@ export default function FiltersScreen() {
               textSize={14}
             />
           </View>
+        </View>
 
-          {/* Секція для вибору дистанції з слайдером [cite: 2026-01-24] */}
-          <View style={styles.section}>
-            <View style={styles.labelRow}>
-              <Text style={styles.sectionLabel}>Distance</Text>
-              <Text style={styles.valueText}>{distance} km</Text>
-            </View>
+        {/* Секція для вибору дистанції з слайдером [cite: 2026-01-24] */}
+        <View style={styles.section}>
+          <View style={styles.labelRow}>
+            <Text style={styles.sectionLabel}>Distance</Text>
+            <Text style={styles.valueText}>{distance} km</Text>
+          </View>
 
-            <Slider
-              style={{ width: "100%", height: 40 }}
-              minimumValue={10}
-              maximumValue={100}
+          <View style={styles.sliderWrapper}>
+            <MultiSlider
+              values={[distance]} // Очікує масив
+              sliderLength={250} // Підбери ширину під свій екран
+              onValuesChange={(v) => updatePreferences({ distance: v[0] })}
+              min={10}
+              max={100}
               step={1}
-              value={distance}
-              onValueChange={setDistance}
-              minimumTrackTintColor={Colors.secondary}
-              maximumTrackTintColor="#F0F2F5" // Колір порожньої частини
-              thumbTintColor={Colors.secondary} // Колір самого кружечка
+              // Стилізація лінії (Track)
+              trackStyle={{ height: 8, borderRadius: 3 }}
+              selectedStyle={{ backgroundColor: Colors.secondary }} // Заповнена частина
+              unselectedStyle={{ backgroundColor: "#F0F2F5" }} // Порожня частина
+              // Стилізація твого кружечка (Marker)
+              customMarker={() => <View style={styles.customMarkerStyle} />}
             />
+          </View>
 
-            <View style={styles.labelRow}>
-              <Text style={styles.subLabel}>10 km</Text>
-              <Text style={styles.subLabel}>100 km</Text>
-            </View>
+          <View style={styles.labelRow}>
+            <Text style={styles.subLabel}>10 km</Text>
+            <Text style={styles.subLabel}>100 km</Text>
           </View>
         </View>
 
-        <AppButton
-          title="Save & Search"
-          variant="pink"
-          onPress={() => console.log("Search pressed")}
-        />
-      </ScrollView>
-    </View>
+        <View style={styles.section}>
+          <View style={styles.labelRow}>
+            <Text style={styles.sectionLabel}>Age</Text>
+            {/* Тут ми виводимо обидва значення з масиву */}
+            <Text style={styles.valueText}>
+              {ageRange[0]} - {ageRange[1]}
+            </Text>
+          </View>
+
+          <View style={styles.sliderWrapper}>
+            <MultiSlider
+              values={[ageRange[0], ageRange[1]]} // Передаємо масив із двох точок
+              sliderLength={250} // Така ж довжина, як у дистанції
+              onValuesChange={(v) =>
+                updatePreferences({ ageRange: [v[0], v[1]] })
+              } // Оновлюємо весь масив [min, max]
+              min={18}
+              max={60}
+              step={1}
+              allowOverlap={false} // Щоб бігунці не "наїжджали" один на одного
+              snapped={true} // Приємне "магнітне" клацання по числах
+              trackStyle={{ height: 8, borderRadius: 3 }}
+              selectedStyle={{ backgroundColor: Colors.secondary }}
+              unselectedStyle={{ backgroundColor: "#F0F2F5" }}
+              // Використовуємо твій кастомний маркер (той самий стиль)
+              customMarker={() => <View style={styles.customMarkerStyle} />}
+            />
+          </View>
+
+          <View style={styles.labelRow}>
+            <Text style={styles.subLabel}>18</Text>
+            <Text style={styles.subLabel}>60</Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>Match Intentions</Text>
+        <View style={styles.tagWrapper}>
+          {[
+            { id: "Chat", icon: "chatbubble-ellipses", label: "Chat" },
+            {
+              id: "Serious",
+              icon: "heart-circle",
+              label: "Serious relationship",
+            },
+            { id: "Casual", icon: "wine", label: "Casual dating" },
+            { id: "Friendship", icon: "hand-left", label: "Friendship" },
+          ].map((item) => (
+            <AppButton
+              key={item.id}
+              title={item.label}
+              variant="white"
+              isActive={intention === item.id}
+              onPress={() => updatePreferences({ intention: item.id })}
+              style={styles.tagButton}
+              textSize={10}
+              icon={
+                <Ionicons
+                  name={item.icon as any}
+                  size={16}
+                  style={{ marginRight: 2 }}
+                  color={
+                    intention === item.id ? Colors.white : Colors.secondary
+                  }
+                />
+              }
+            />
+          ))}
+        </View>
+      </View>
+
+      <AppButton
+        title="Save & Search"
+        variant="pink"
+        onPress={async () => {
+          await handleSave();
+          console.log("Збережені фільтри:", preferences);
+          router.push("/swipes");
+        }}
+      />
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   scrollContent: {
     paddingHorizontal: 16,
   },
   headerTitle: {
-    fontFamily: "Raleway", // Використовуємо кастомний шрифт [cite: 2026-01-24]
+    fontFamily: "Raleway",
     fontSize: 28,
     color: "#1A1F36",
     marginBottom: 24,
@@ -149,11 +239,10 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   card: {
-    backgroundColor: Colors.white, // Напівпрозорість для ефекту скла [cite: 2026-01-14]
+    backgroundColor: Colors.white,
     borderRadius: 24,
     padding: 16,
     marginBottom: 24,
-    // Покращені тіні [cite: 2026-01-24]
     shadowColor: Colors.shadow,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.05,
@@ -171,16 +260,17 @@ const styles = StyleSheet.create({
   genderRow: {
     flexDirection: "row",
     width: "100%",
-    gap: 6,
+    gap: 4,
   },
   flexButton: {
     flex: 1,
-    height: 46, // Оптимальна висота для тач-зони [cite: 2026-01-14]
+    minWidth: 80,
+    height: 46,
   },
   section: {
     marginBottom: 10,
-    backgroundColor: Colors.white, // Білий фон для "картки"
-    padding: 20,
+    backgroundColor: Colors.white,
+    padding: 10,
     borderRadius: 24,
     shadowColor: Colors.shadow,
     shadowOffset: { width: 0, height: 4 },
@@ -202,173 +292,49 @@ const styles = StyleSheet.create({
   valueText: {
     fontSize: 16,
     fontFamily: "Raleway",
-    color: Colors.secondary, // Рожевий колір для цифр
+    color: Colors.secondary,
+  },
+  sliderWrapper: {
+    alignItems: "center",
+    justifyContent: "center",
+    height: 40,
+    marginVertical: 10,
+  },
+  customMarkerStyle: {
+    height: 24,
+    width: 24,
+    borderRadius: 13,
+    backgroundColor: Colors.secondary,
+    borderWidth: 6,
+    borderColor: Colors.white,
+    marginLeft: 4,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 1, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 4,
   },
   subLabel: {
     fontSize: 12,
     fontFamily: "Raleway",
-    color: Colors.textLight, // Світло-сірий для підписів під бігунцем
+    color: Colors.textLight,
   },
-  // Сам Slider стилізується через пропси, але висоту задаємо тут
-  slider: {
-    width: "100%",
-    height: 40,
-    marginVertical: 12,
+  tagWrapper: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginTop: 10,
+    // Переконайся, що тут НЕМАЄ alignItems: "stretch"
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  tagButton: {
+    flex: 0,
+    width: "auto",
+    alignSelf: "flex-start",
+    height: 30,
+    minWidth: 100,
+    paddingHorizontal: 4,
+    flexShrink: 1,
   },
 });
-
-// import { Colors } from "@/constants/Colors";
-// import React, { useState } from "react";
-// import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
-// import ScreenContainer from "@/components/ScreenContainer";
-// import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-// import AppButton from "@/components/AppButton";
-
-// export default function FiltersScreen() {
-//   // Створюємо стан для вибору статі [cite: 2026-01-24]
-//   const [gender, setGender] = useState("woman");
-
-//   return (
-//     <ScreenContainer>
-//       <Text style={styles.header}>Find your match...</Text>
-
-//       <View style={styles.card}>
-//         <Text style={styles.label}>Gender</Text>
-
-//         <View style={styles.buttonGroup}>
-//           {/* Кнопка "Woman" [cite: 2026-01-24] */}
-//           <AppButton
-//             title="Woman"
-//             isActive={gender === "woman"}
-//             variant="secondary"
-//             icon={
-//               <MaterialCommunityIcons
-//                 name="face-woman-shimmer"
-//                 size={30}
-//                 color={gender === "woman" ? Colors.secondary : Colors.white}
-//               />
-//             }
-//             onPress={() => setGender("woman")}
-//           >
-//             {/* <Text
-//               style={[
-//                 styles.optionText,
-//                 gender === "woman" && styles.selectedText,
-//               ]}
-//             >
-//               Woman
-//             </Text> */}
-//           </AppButton>
-
-//           {/* Кнопка "Man" [cite: 2026-01-24] */}
-//           <TouchableOpacity
-//             style={[styles.option, gender === "man" && styles.selectedOption]}
-//             onPress={() => setGender("man")}
-//           >
-//             <MaterialCommunityIcons
-//               name="face-man-shimmer"
-//               size={30}
-//               color={gender === "man" ? Colors.white : Colors.primary}
-//             />
-//             {/* <Text
-//               style={[
-//                 styles.optionText,
-//                 gender === "man" && styles.selectedText,
-//               ]}
-//             >
-//               Man
-//             </Text> */}
-//           </TouchableOpacity>
-
-//           {/* Кнопка "Both" [cite: 2026-01-24] */}
-//           <TouchableOpacity
-//             style={[styles.option, gender === "both" && styles.selectedOption]}
-//             onPress={() => setGender("both")}
-//           >
-//             <Ionicons
-//               name="people-outline"
-//               size={30}
-//               fontWeight="bold"
-//               color={gender === "both" ? Colors.white : Colors.textMain}
-//             />
-//             {/* <Text
-//               style={[
-//                 styles.optionText,
-//                 gender === "both" && styles.selectedText,
-//               ]}
-//             >
-//               Both
-//             </Text> */}
-//           </TouchableOpacity>
-//         </View>
-//       </View>
-
-//       <AppButton
-//         title="Save & Search"
-//         variant="primary"
-//         onPress={() => console.log("Searching...")}
-//       />
-//     </ScreenContainer>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   header: {
-//     fontSize: 26,
-//     fontWeight: "bold",
-//     color: Colors.textMain,
-//     marginBottom: 20,
-//   },
-//   card: {
-//     backgroundColor: Colors.white,
-//     padding: 20,
-//     borderRadius: 20,
-//     shadowColor: Colors.shadow,
-//     shadowOpacity: 0.1,
-//     shadowRadius: 10,
-//     elevation: 5,
-//   },
-//   label: {
-//     fontSize: 16,
-//     color: Colors.textMain,
-//     marginBottom: 15,
-//     fontWeight: "600",
-//   },
-//   buttonGroup: {
-//     flexDirection: "row",
-//     justifyContent: "space-between",
-//     gap: 10,
-//   },
-//   option: {
-//     flex: 1,
-//     paddingVertical: 12,
-//     borderRadius: 13,
-//     borderWidth: 1,
-//     borderColor: Colors.background, // Блакитний контур [cite: 2026-01-24]
-//     alignItems: "center",
-//   },
-//   selectedOption: {
-//     backgroundColor: Colors.primary, // Активний блакитний колір [cite: 2026-01-24]
-//     borderColor: Colors.primary,
-//   },
-//   optionText: {
-//     color: Colors.primary,
-//     fontWeight: "bold",
-//   },
-//   selectedText: {
-//     color: Colors.white,
-//   },
-//   applyButton: {
-//     backgroundColor: Colors.secondary, // Рожева кнопка дії [cite: 2026-01-14]
-//     paddingVertical: 18,
-//     borderRadius: 30,
-//     marginTop: "auto",
-//     marginBottom: 20,
-//     alignItems: "center",
-//   },
-//   applyButtonText: {
-//     color: Colors.white,
-//     fontSize: 18,
-//     fontWeight: "bold",
-//   },
-// });
