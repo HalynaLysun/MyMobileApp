@@ -1,14 +1,30 @@
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
 export const register = mutation({
   args: {
     email: v.string(),
     password: v.string(),
-    gender: v.string(),
+    firstName: v.string(),
+    age: v.number(),
+    userGender: v.union(
+      v.literal("male"),
+      v.literal("female"),
+      v.literal("non-binary"),
+    ),
+    city: v.string(), // Додаємо city
+    createdAt: v.number(),
+    bio: v.optional(v.string()),
+    photoUrl: v.optional(v.string()),
+    gender: v.union(v.literal("male"), v.literal("female"), v.literal("all")), // "Male", "Female"
     distance: v.number(),
     ageRange: v.array(v.number()),
-    intention: v.string(),
+    intention: v.union(
+      v.literal("dating"),
+      v.literal("friendship"),
+      v.literal("chat"),
+      v.literal("serious relationship"),
+    ), // Наприклад: [18, 30]
   },
   handler: async (ctx, args) => {
     // Перевірка на дублікат
@@ -32,13 +48,25 @@ export const register = mutation({
 export const updateFilters = mutation({
   args: {
     id: v.id("users"),
-    gender: v.string(),
+    gender: v.union(v.literal("male"), v.literal("female"), v.literal("all")),
     distance: v.number(),
     ageRange: v.array(v.number()),
-    intention: v.string(),
+    intention: v.union(
+      v.literal("dating"),
+      v.literal("friendship"),
+      v.literal("chat"),
+      v.literal("serious relationship"),
+    ),
   },
   handler: async (ctx, args) => {
     const { id, ...fields } = args;
     await ctx.db.patch(id, fields); // Patch просто оновлює існуючі поля
+  },
+});
+
+export const getUser = query({
+  args: { id: v.id("users") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.id);
   },
 });

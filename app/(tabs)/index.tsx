@@ -9,26 +9,28 @@ import MultiSlider from "@ptomasroos/react-native-multi-slider";
 import { useRouter } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 import { useAuth } from "@/context/AuthContext";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { useEffect } from "react";
+import { Intention } from "@/types/user";
 
 const iconList = Object.values(fas) as IconDefinition[];
 
 library.add(...iconList);
 
 export default function FiltersScreen() {
-  const { preferences, updatePreferences } = useAuth();
+  const { user, preferences, updatePreferences } = useAuth();
   const router = useRouter();
 
   // Ми використовуємо значення з preferences для відображення в UI
   const { gender, distance, ageRange, intention } = preferences;
 
   const update = useMutation(api.users.updateFilters);
-  const { user } = useAuth();
+
   const handleSave = async () => {
     if (!user) {
-      alert("Помилка: користувач не знайдений");
+      alert("Error: User not found");
       return;
     }
     try {
@@ -39,11 +41,30 @@ export default function FiltersScreen() {
         ageRange: preferences.ageRange,
         intention: preferences.intention,
       });
-      alert("Налаштування збережено в хмарі! ✨");
-    } catch (err) {
-      alert("Помилка збереження");
+      alert("Settings saved to the cloud! ✨");
+    } catch {
+      alert("Error saving settings");
     }
   };
+
+  // Запит виконається ТІЛЬКИ якщо user та user.id існують
+  const userData = useQuery(
+    api.users.getUser,
+    user?.id ? { id: user.id as Id<"users"> } : "skip",
+  );
+
+  useEffect(() => {
+    // 2. Якщо дані прийшли з бази — записуємо їх у наш локальний стан (state)
+    if (userData) {
+      updatePreferences({
+        gender: userData.gender,
+        distance: userData.distance,
+        ageRange: [userData.ageRange[0], userData.ageRange[1]],
+        intention: userData.intention,
+      });
+    }
+  }, [userData, updatePreferences]);
+
   return (
     <ScreenContainer withScroll={true}>
       <Text style={styles.headerTitle}>Find your match...</Text>
@@ -181,21 +202,23 @@ export default function FiltersScreen() {
         <Text style={styles.sectionLabel}>Match Intentions</Text>
         <View style={styles.tagWrapper}>
           {[
-            { id: "Chat", icon: "chatbubble-ellipses", label: "Chat" },
+            { id: "chat", icon: "chatbubble-ellipses", label: "Chat" },
             {
-              id: "Serious",
+              id: "serious",
               icon: "heart-circle",
               label: "Serious relationship",
             },
-            { id: "Casual", icon: "wine", label: "Casual dating" },
-            { id: "Friendship", icon: "hand-left", label: "Friendship" },
+            { id: "casual", icon: "wine", label: "Casual dating" },
+            { id: "friendship", icon: "hand-left", label: "Friendship" },
           ].map((item) => (
             <AppButton
               key={item.id}
               title={item.label}
               variant="white"
               isActive={intention === item.id}
-              onPress={() => updatePreferences({ intention: item.id })}
+              onPress={() =>
+                updatePreferences({ intention: item.id as Intention })
+              }
               style={styles.tagButton}
               textSize={10}
               icon={

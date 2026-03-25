@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   View,
   Text,
@@ -11,37 +11,33 @@ import { useRouter } from "expo-router";
 import ScreenContainer from "@/components/ScreenContainer";
 import AppButton from "@/components/AppButton";
 import { Colors } from "@/constants/Colors";
-import { useAuth } from "@/context/AuthContext";
-import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { login } = useAuth(); // Використовуємо функцію login з нашого контексту
-
-  const registerUser = useMutation(api.users.register);
-
-  const handleRegister = async () => {
-    try {
-      const newUserId = await registerUser({
-        email: email,
-        password: password,
-        gender: "female",
-        distance: 10,
-        ageRange: [24, 37],
-        intention: "Dating",
-      });
-      login({ id: newUserId, email: email });
-      alert("Success! You are in the cloud ☁️");
-      router.replace("/(tabs)");
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Невідома помилка";
-      alert("Помилка: " + message);
-    }
-  };
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const handleNextStep = () => {
+    // Валідація заповнення полів
+    if (!email || !password) {
+      alert("Please fill in all fields");
+      return;
+    }
+
+    if (!email.includes("@")) {
+      alert("Please enter a valid email");
+      return;
+    }
+
+    // 2. ЗМІНА ФУНКЦІОНАЛУ:
+    // Замість мутації registerUser, ми просто переходимо на новий екран.
+    // Передаємо введені дані як параметри, щоб використати їх на другому кроці.
+    router.push({
+      pathname: "/(auth)/setupProfile",
+      params: { email, password },
+    });
+  };
 
   return (
     <ScreenContainer withScroll={true}>
@@ -82,7 +78,7 @@ export default function RegisterScreen() {
             <AppButton
               title="Sign Up"
               variant="pink"
-              onPress={handleRegister}
+              onPress={handleNextStep}
             />
           </View>
         </View>

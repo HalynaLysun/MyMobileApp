@@ -1,55 +1,48 @@
-import React, { createContext, useState, useContext, ReactNode } from "react";
-
+import { createContext, useState, useContext, ReactNode } from "react";
+import {
+  UserProfile,
+  UserPreferences,
+  DEFAULT_USER_PREFERENCES,
+} from "@/types/user";
 // 1. Визначаємо, які саме дані ми будемо зберігати (Interface)
-interface UserPreferences {
-  gender: "male" | "female" | "all";
-  distance: number;
-  ageRange: [number, number];
-  intention: string;
-  options: {
-    activeOnly: boolean;
-    verifiedOnly: boolean;
-  };
-}
 
 interface AuthContextType {
-  user: { id: string; email: string } | null; // Дані юзера
-  preferences: UserPreferences; // Його фільтри
+  user: UserProfile | null; // Тепер тут повна інформація про юзера
+  preferences: UserPreferences;
   updatePreferences: (newPrefs: Partial<UserPreferences>) => void;
-  login: (userData: { id: string; email: string }) => void;
+  login: (userData: UserProfile) => void;
   logout: () => void;
 }
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // 2. Створюємо провайдер, який "огортає" весь додаток
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<{ id: string; email: string } | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
 
   // Початкові значення (ті самі, що ми малювали на екрані)
-  const [preferences, setPreferences] = useState<UserPreferences>({
-    gender: "all",
-    distance: 10,
-    ageRange: [24, 37],
-    intention: "Chat",
-    options: {
-      activeOnly: false,
-      verifiedOnly: false,
-    },
-  });
-
   const updatePreferences = (newPrefs: Partial<UserPreferences>) => {
-    setPreferences((prev) => ({ ...prev, ...newPrefs }));
+    setUser((prev) => {
+      if (!prev) return null;
+      return { ...prev, ...newPrefs };
+    });
   };
 
-  const login = (userData: { id: string; email: string }) => {
+  const login = (userData: UserProfile) => {
     setUser(userData);
   };
   const logout = () => setUser(null);
 
   return (
     <AuthContext.Provider
-      value={{ user, preferences, updatePreferences, login, logout }}
+      value={{
+        user,
+        preferences: user
+          ? (user as UserPreferences)
+          : DEFAULT_USER_PREFERENCES,
+        updatePreferences,
+        login,
+        logout,
+      }}
     >
       {children}
     </AuthContext.Provider>
