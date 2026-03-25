@@ -21,12 +21,12 @@ export default defineSchema({
     distance: v.number(), // Наприклад: 10
     ageRange: v.array(v.number()),
     intention: v.union(
-      v.literal("dating"),
-      v.literal("friendship"),
-      v.literal("chat"),
+      v.literal("chatting"),
       v.literal("serious relationship"),
+      v.literal("casual dating"),
+      v.literal("friendship"),
     ),
     createdAt: v.number(),
-    updatedAt: v.optional(v.number()),
+    // updatedAt: v.optional(v.number()),
   }).index("by_email", ["email"]),
 });

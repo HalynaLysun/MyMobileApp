@@ -12,19 +12,29 @@ import { useAuth } from "@/context/AuthContext";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { useEffect } from "react";
-import { Intention } from "@/types/user";
+import { useEffect, useState } from "react";
+import { DEFAULT_USER_PREFERENCES, Intention } from "@/types/user";
+import WelcomeModal from "@/components/WelcomeModal";
 
 const iconList = Object.values(fas) as IconDefinition[];
 
 library.add(...iconList);
 
 export default function FiltersScreen() {
-  const { user, preferences, updatePreferences } = useAuth();
+  const { user, updatePreferences } = useAuth();
   const router = useRouter();
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { gender, distance, ageRange, intention } =
+    user || DEFAULT_USER_PREFERENCES;
 
-  // Ми використовуємо значення з preferences для відображення в UI
-  const { gender, distance, ageRange, intention } = preferences;
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  useEffect(() => {
+    // Тут можна додати перевірку: якщо користувач щойно зареєструвався
+    // Для тесту поставимо true
+    setShowWelcome(true);
+  }, []);
 
   const update = useMutation(api.users.updateFilters);
 
@@ -33,17 +43,20 @@ export default function FiltersScreen() {
       alert("Error: User not found");
       return;
     }
+    setIsSaving(true);
     try {
       await update({
         id: user?.id as Id<"users">, // Тепер TypeScript знайде id
-        gender: preferences.gender, // Звертайся до свого об'єкта preferences
-        distance: preferences.distance,
-        ageRange: preferences.ageRange,
-        intention: preferences.intention,
+        gender: user.gender, // Звертайся до свого об'єкта preferences
+        distance: user.distance,
+        ageRange: user.ageRange,
+        intention: user.intention,
       });
-      alert("Settings saved to the cloud! ✨");
-    } catch {
+    } catch (error) {
       alert("Error saving settings");
+      console.log(error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -55,7 +68,7 @@ export default function FiltersScreen() {
 
   useEffect(() => {
     // 2. Якщо дані прийшли з бази — записуємо їх у наш локальний стан (state)
-    if (userData) {
+    if (userData && !isLoaded) {
       updatePreferences({
         gender: userData.gender,
         distance: userData.distance,
@@ -63,7 +76,8 @@ export default function FiltersScreen() {
         intention: userData.intention,
       });
     }
-  }, [userData, updatePreferences]);
+    setIsLoaded(true);
+  }, [userData, isLoaded, updatePreferences]);
 
   return (
     <ScreenContainer withScroll={true}>
@@ -202,13 +216,17 @@ export default function FiltersScreen() {
         <Text style={styles.sectionLabel}>Match Intentions</Text>
         <View style={styles.tagWrapper}>
           {[
-            { id: "chat", icon: "chatbubble-ellipses", label: "Chat" },
             {
-              id: "serious",
+              id: "chatting",
+              icon: "chatbubble-ellipses",
+              label: "Just chatting",
+            },
+            {
+              id: "serious relationship",
               icon: "heart-circle",
               label: "Serious relationship",
             },
-            { id: "casual", icon: "wine", label: "Casual dating" },
+            { id: "casual dating", icon: "wine", label: "Casual dating" },
             { id: "friendship", icon: "hand-left", label: "Friendship" },
           ].map((item) => (
             <AppButton
@@ -239,11 +257,16 @@ export default function FiltersScreen() {
       <AppButton
         title="Save & Search"
         variant="pink"
+        loading={isSaving}
         onPress={async () => {
           await handleSave();
-          console.log("Збережені фільтри:", preferences);
+          console.log("Збережені фільтри:", user);
           router.push("/swipes");
         }}
+      />
+      <WelcomeModal
+        isVisible={showWelcome}
+        onClose={() => setShowWelcome(false)}
       />
     </ScreenContainer>
   );

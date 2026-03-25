@@ -1,6 +1,19 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
+const intentionValidator = v.union(
+  v.literal("chatting"),
+  v.literal("serious relationship"),
+  v.literal("casual dating"),
+  v.literal("friendship"),
+);
+
+const genderValidator = v.union(
+  v.literal("male"),
+  v.literal("female"),
+  v.literal("all"),
+);
+
 export const register = mutation({
   args: {
     email: v.string(),
@@ -16,15 +29,10 @@ export const register = mutation({
     createdAt: v.number(),
     bio: v.optional(v.string()),
     photoUrl: v.optional(v.string()),
-    gender: v.union(v.literal("male"), v.literal("female"), v.literal("all")), // "Male", "Female"
+    gender: genderValidator, // "Male", "Female"
     distance: v.number(),
     ageRange: v.array(v.number()),
-    intention: v.union(
-      v.literal("dating"),
-      v.literal("friendship"),
-      v.literal("chat"),
-      v.literal("serious relationship"),
-    ), // Наприклад: [18, 30]
+    intention: intentionValidator,
   },
   handler: async (ctx, args) => {
     // Перевірка на дублікат
@@ -38,25 +46,17 @@ export const register = mutation({
     }
 
     // Записуємо все разом із часом створення
-    return await ctx.db.insert("users", {
-      ...args,
-      createdAt: Date.now(),
-    });
+    return await ctx.db.insert("users", args);
   },
 });
 
 export const updateFilters = mutation({
   args: {
     id: v.id("users"),
-    gender: v.union(v.literal("male"), v.literal("female"), v.literal("all")),
+    gender: genderValidator,
     distance: v.number(),
     ageRange: v.array(v.number()),
-    intention: v.union(
-      v.literal("dating"),
-      v.literal("friendship"),
-      v.literal("chat"),
-      v.literal("serious relationship"),
-    ),
+    intention: intentionValidator,
   },
   handler: async (ctx, args) => {
     const { id, ...fields } = args;

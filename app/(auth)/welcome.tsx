@@ -24,21 +24,11 @@ export default function WelcomeScreen() {
           </Text>
         </View>
 
-        <View style={styles.buttonContainer}>
-          <AppButton
-            title="Create Account"
-            variant="pink"
-            onPress={() => router.push("/(auth)/register")}
-          />
-
-          <View style={{ height: 16 }} />
-
-          <AppButton
-            title="Log In"
-            variant="white"
-            onPress={() => console.log("Go to Login")}
-          />
-        </View>
+        <AppButton
+          title="Create Account"
+          variant="pink"
+          onPress={() => router.push("/(auth)/register")}
+        />
       </View>
     </ScreenContainer>
   );
@@ -83,8 +73,5 @@ const styles = StyleSheet.create({
     color: Colors.textLight,
     textAlign: "center",
     paddingHorizontal: 20,
-  },
-  buttonContainer: {
-    width: "100%",
   },
 });

@@ -1,4 +1,3 @@
-// app/(auth)/setup-profile.tsx
 import { useState } from "react";
 import {
   View,
@@ -32,6 +31,7 @@ export default function SetupProfileScreen() {
   const [userGender, setUserGender] = useState<
     "male" | "female" | "non-binary"
   >("male");
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleFinalRegister = async () => {
     console.log("Button pressed!");
@@ -48,6 +48,7 @@ export default function SetupProfileScreen() {
     }
 
     try {
+      setIsSaving(true);
       // 2. Формуємо повний об'єкт для бази даних
       const userData = {
         email: email as string,
@@ -68,12 +69,15 @@ export default function SetupProfileScreen() {
         id: userId,
         ...userData,
       });
-      router.replace("/(tabs)/profile");
+
+      router.replace("/(tabs)");
     } catch (err) {
       Alert.alert(
         "Registration Failed",
         err instanceof Error ? err.message : "Unknown error",
       );
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -148,6 +152,7 @@ export default function SetupProfileScreen() {
           <View style={{ marginTop: 20 }}>
             <AppButton
               title="Save & Start"
+              loading={isSaving}
               variant="pink"
               onPress={handleFinalRegister}
             />

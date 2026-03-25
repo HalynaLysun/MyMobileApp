@@ -1,9 +1,11 @@
+import { Id } from "@/convex/_generated/dataModel";
+
 export type Gender = "male" | "female" | "all";
 export type Intention =
-  | "dating"
-  | "friendship"
-  | "chat"
-  | "serious relationship";
+  | "chatting"
+  | "serious relationship"
+  | "casual dating"
+  | "friendship";
 
 export interface UserPreferences {
   gender: Gender;
@@ -16,7 +18,7 @@ export const DEFAULT_USER_PREFERENCES: UserPreferences = {
   gender: "all",
   distance: 10,
   ageRange: [24, 38],
-  intention: "chat",
+  intention: "chatting",
   // options: {
   //   activeOnly: false,
   //   verifiedOnly: false,
@@ -24,7 +26,7 @@ export const DEFAULT_USER_PREFERENCES: UserPreferences = {
 };
 
 export interface UserProfile extends UserPreferences {
-  id: string;
+  id: Id<"users">;
   email: string;
   firstName: string;
   age: number;

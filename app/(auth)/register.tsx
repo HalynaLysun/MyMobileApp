@@ -30,9 +30,6 @@ export default function RegisterScreen() {
       return;
     }
 
-    // 2. ЗМІНА ФУНКЦІОНАЛУ:
-    // Замість мутації registerUser, ми просто переходимо на новий екран.
-    // Передаємо введені дані як параметри, щоб використати їх на другому кроці.
     router.push({
       pathname: "/(auth)/setupProfile",
       params: { email, password },
@@ -72,6 +69,7 @@ export default function RegisterScreen() {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
+            autoCorrect={false}
           />
 
           <View style={{ marginTop: 20 }}>
@@ -79,6 +77,12 @@ export default function RegisterScreen() {
               title="Sign Up"
               variant="pink"
               onPress={handleNextStep}
+            />
+
+            <AppButton
+              title="Log In"
+              variant="white"
+              onPress={() => console.log("Go to Login")}
             />
           </View>
         </View>

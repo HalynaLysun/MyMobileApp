@@ -1,5 +1,5 @@
-import React from "react";
 import {
+  ActivityIndicator,
   TouchableOpacity,
   Text,
   StyleSheet,
@@ -15,7 +15,8 @@ interface AppButtonProps extends TouchableOpacityProps {
   icon?: React.ReactNode;
   isActive?: boolean;
   textSize?: number;
-  // Для визначення активного стану (якщо потрібно) [cite: 2026-01-24]
+  loading?: boolean;
+  disabled?: boolean; // Додано для відображення індикатора завантаження [cite: 2026-01-24]
 }
 
 export default function AppButton({
@@ -24,6 +25,8 @@ export default function AppButton({
   icon,
   isActive = false,
   textSize = 18,
+  loading = false,
+  disabled,
   style,
   ...props
 }: AppButtonProps) {
@@ -59,19 +62,25 @@ export default function AppButton({
     <TouchableOpacity
       style={[styles.button, { backgroundColor: currentStyle.bg }, style]}
       activeOpacity={0.8}
+      disabled={disabled || loading}
       {...props}
     >
       <View style={styles.content}>
         {icon && <View style={styles.iconContainer}>{icon}</View>}
-        <Text
-          style={[
-            styles.text,
-            { color: currentStyle.text },
-            textSize ? { fontSize: textSize } : null,
-          ]}
-        >
-          {title}
-        </Text>
+
+        {loading ? (
+          <ActivityIndicator color="#fff" /> // Показуємо крутилку
+        ) : (
+          <Text
+            style={[
+              styles.text,
+              { color: currentStyle.text },
+              textSize ? { fontSize: textSize } : null,
+            ]}
+          >
+            {title}
+          </Text>
+        )}
       </View>
     </TouchableOpacity>
   );
