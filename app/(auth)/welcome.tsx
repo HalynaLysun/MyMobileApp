@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    backgroundColor: Colors.inputBack,
     justifyContent: "center",
     alignItems: "center",
   },

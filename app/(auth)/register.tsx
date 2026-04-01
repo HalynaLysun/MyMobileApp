@@ -53,8 +53,9 @@ export default function RegisterScreen() {
           <Text style={styles.inputLabel}>Email</Text>
           <TextInput
             style={styles.input}
+            autoFocus={true}
             placeholder="example@mail.com"
-            placeholderTextColor="rgba(255,255,255,0.5)"
+            placeholderTextColor={Colors.textPlaceholder}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -65,7 +66,7 @@ export default function RegisterScreen() {
           <TextInput
             style={styles.input}
             placeholder="••••••••"
-            placeholderTextColor="rgba(255,255,255,0.5)"
+            placeholderTextColor={Colors.textPlaceholder}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -82,7 +83,10 @@ export default function RegisterScreen() {
             <AppButton
               title="Log In"
               variant="white"
-              onPress={() => console.log("Go to Login")}
+              onPress={() => {
+                console.log("Go to Login");
+                router.push("/(auth)/login");
+              }}
             />
           </View>
         </View>
@@ -145,14 +149,14 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   input: {
-    backgroundColor: "#F7F9FC", // Легкий відтінок сірого для поля
+    backgroundColor: Colors.inputBack, // Легкий відтінок сірого для поля
     borderRadius: 16,
     padding: 16,
     color: Colors.textMain,
     marginBottom: 20,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: Colors.inputBorder, // Світло-сірий для обводки
   },
   backButton: {
     marginTop: 25,

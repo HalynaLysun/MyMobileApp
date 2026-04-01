@@ -3,6 +3,7 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { useEffect } from "react";
+import { ActivityIndicator, View } from "react-native";
 
 const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!);
 
@@ -23,6 +24,14 @@ function NavigationData() {
       router.replace("/(tabs)");
     }
   }, [user, isLoading, segments, router]);
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#FF4B8C" />
+      </View>
+    );
+  }
 
   return (
     <Stack screenOptions={{ headerShown: false }}>

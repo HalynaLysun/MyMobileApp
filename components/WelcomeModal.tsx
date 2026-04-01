@@ -1,6 +1,9 @@
 import { Modal, View, Text, StyleSheet, ScrollView } from "react-native";
 import { Colors } from "@/constants/Colors";
 import AppButton from "./AppButton";
+import { api } from "@/convex/_generated/api";
+import { useAuth } from "@/context/AuthContext";
+import { useMutation } from "convex/react";
 
 interface WelcomeModalProps {
   isVisible: boolean;
@@ -11,6 +14,21 @@ export default function WelcomeModal({
   isVisible,
   onClose,
 }: WelcomeModalProps) {
+  const { user } = useAuth();
+  const markSeen = useMutation(api.users.markWelcomeAsSeen);
+
+  const handlePress = async () => {
+    if (user?.id) {
+      try {
+        // 1. Повідомляємо базу даних, що юзер бачив модалку
+        await markSeen({ id: user.id });
+      } catch (error) {
+        console.error("Failed to mark welcome as seen:", error);
+      }
+    }
+    // 2. Закриваємо модалку на екрані (викликаємо функцію з пропсів)
+    onClose();
+  };
   return (
     <Modal visible={isVisible} transparent animationType="fade">
       <View style={styles.overlay}>
@@ -48,7 +66,7 @@ export default function WelcomeModal({
             <AppButton
               title="Got it, let's explore!"
               variant="pink"
-              onPress={onClose}
+              onPress={handlePress}
               style={{ marginTop: 20 }}
             />
           </ScrollView>

@@ -27,6 +27,7 @@ export default defineSchema({
       v.literal("friendship"),
     ),
     createdAt: v.number(),
+    hasSeenWelcome: v.boolean(),
     // updatedAt: v.optional(v.number()),
   }).index("by_email", ["email"]),
 });

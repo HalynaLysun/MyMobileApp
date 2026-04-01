@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TextInput,
   Alert,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
@@ -13,7 +12,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@/context/AuthContext";
-import { DEFAULT_USER_PREFERENCES } from "@/types/user";
+import { DEFAULT_USER_PREFERENCES, UserProfile } from "@/types/user";
 import ScreenContainer from "@/components/ScreenContainer";
 import AppButton from "@/components/AppButton";
 import { Colors } from "@/constants/Colors";
@@ -35,8 +34,11 @@ export default function SetupProfileScreen() {
 
   const handleFinalRegister = async () => {
     console.log("Button pressed!");
+
+    const cleanFirstName = firstName.trim();
+    const cleanCity = city.trim();
     // 1. Валідація
-    if (!firstName || !age || !city) {
+    if (!cleanFirstName || !age || !cleanCity) {
       Alert.alert("Wait!", "Please fill in all fields to continue.");
       return;
     }
@@ -51,25 +53,28 @@ export default function SetupProfileScreen() {
       setIsSaving(true);
       // 2. Формуємо повний об'єкт для бази даних
       const userData = {
-        email: email as string,
+        email: (email as string).trim().toLowerCase(),
         password: password as string,
-        firstName,
+        firstName: cleanFirstName,
         age: ageNum,
         userGender,
-        city,
+        city: cleanCity,
         ...DEFAULT_USER_PREFERENCES, // Додаємо стандартні фільтри
         createdAt: Date.now(),
       };
 
       // 3. Записуємо в Convex
-      const userId = await registerUser(userData);
-
-      // 4. Оновлюємо локальний стейт (AuthContext)
-      login({
-        id: userId,
-        ...userData,
-      });
-
+      const fullUser = await registerUser(userData);
+      if (fullUser) {
+        login({
+          ...fullUser,
+          id: fullUser._id, // переконайся, що мапиш _id у id, якщо твій UserProfile цього вимагає
+          ageRange: [fullUser.ageRange[0], fullUser.ageRange[1]] as [
+            number,
+            number,
+          ],
+        } as UserProfile);
+      }
       router.replace("/(tabs)");
     } catch (err) {
       Alert.alert(
@@ -129,23 +134,19 @@ export default function SetupProfileScreen() {
           <Text style={styles.inputLabel}>I am a:</Text>
           <View style={styles.genderContainer}>
             {(["male", "female", "non-binary"] as const).map((g) => (
-              <TouchableOpacity
-                key={g}
-                style={[
-                  styles.genderOption,
-                  userGender === g && styles.genderSelected,
-                ]}
-                onPress={() => setUserGender(g)}
-              >
-                <Text
-                  style={[
-                    styles.genderText,
-                    userGender === g && styles.genderTextSelected,
-                  ]}
-                >
-                  {g.charAt(0).toUpperCase() + g.slice(1)}
-                </Text>
-              </TouchableOpacity>
+              <View key={g} style={{ flex: 1, marginHorizontal: 4 }}>
+                <AppButton
+                  title={g.charAt(0).toUpperCase() + g.slice(1)}
+                  // Кнопка стає активною (рожевою), якщо цей гендер обраний
+                  isActive={userGender === g}
+                  // Якщо не обраний, вона буде білою (variant="white")
+                  variant="white"
+                  onPress={() => setUserGender(g)}
+                  // Трохи зменшимо висоту та текст, щоб три кнопки влізли в рядок
+                  style={{ height: 48, marginVertical: 0 }}
+                  textSize={14}
+                />
+              </View>
             ))}
           </View>
 
@@ -205,14 +206,14 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   input: {
-    backgroundColor: "#F7F9FC",
+    backgroundColor: Colors.inputBack,
     borderRadius: 16,
     padding: 16,
     color: Colors.textMain,
     marginBottom: 20,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: Colors.inputBorder,
   },
   row: {
     flexDirection: "row",
@@ -221,26 +222,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 20,
-  },
-  genderOption: {
-    flex: 1,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    borderRadius: 12,
-    alignItems: "center",
-    marginHorizontal: 4,
-    backgroundColor: "#F7F9FC",
-  },
-  genderSelected: {
-    borderColor: Colors.secondary,
-    backgroundColor: "rgba(255, 117, 140, 0.1)", // Світло-рожевий фон
-  },
-  genderText: {
-    color: Colors.textLight,
-    fontWeight: "600",
-  },
-  genderTextSelected: {
-    color: Colors.secondary,
   },
 });

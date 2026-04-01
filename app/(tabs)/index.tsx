@@ -7,11 +7,10 @@ import { fas } from "@fortawesome/free-solid-svg-icons";
 // import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
 import { useRouter } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
+import { Alert, StyleSheet, Text, View } from "react-native";
 import { useAuth } from "@/context/AuthContext";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
 import { useEffect, useState } from "react";
 import { DEFAULT_USER_PREFERENCES, Intention } from "@/types/user";
 import WelcomeModal from "@/components/WelcomeModal";
@@ -27,14 +26,9 @@ export default function FiltersScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const { gender, distance, ageRange, intention } =
     user || DEFAULT_USER_PREFERENCES;
+  const [closedLocally, setClosedLocally] = useState(false);
 
-  const [showWelcome, setShowWelcome] = useState(false);
-
-  useEffect(() => {
-    // Тут можна додати перевірку: якщо користувач щойно зареєструвався
-    // Для тесту поставимо true
-    setShowWelcome(true);
-  }, []);
+  // const { newUser } = useLocalSearchParams();
 
   const update = useMutation(api.users.updateFilters);
 
@@ -46,8 +40,8 @@ export default function FiltersScreen() {
     setIsSaving(true);
     try {
       await update({
-        id: user?.id as Id<"users">, // Тепер TypeScript знайде id
-        gender: user.gender, // Звертайся до свого об'єкта preferences
+        id: user?.id,
+        gender: user.gender,
         distance: user.distance,
         ageRange: user.ageRange,
         intention: user.intention,
@@ -63,8 +57,11 @@ export default function FiltersScreen() {
   // Запит виконається ТІЛЬКИ якщо user та user.id існують
   const userData = useQuery(
     api.users.getUser,
-    user?.id ? { id: user.id as Id<"users"> } : "skip",
+    user?.id ? { id: user.id } : "skip",
   );
+
+  const isModalVisible =
+    userData && userData.hasSeenWelcome === false && !closedLocally;
 
   useEffect(() => {
     // 2. Якщо дані прийшли з бази — записуємо їх у наш локальний стан (state)
@@ -164,7 +161,7 @@ export default function FiltersScreen() {
               // Стилізація лінії (Track)
               trackStyle={{ height: 8, borderRadius: 3 }}
               selectedStyle={{ backgroundColor: Colors.secondary }} // Заповнена частина
-              unselectedStyle={{ backgroundColor: "#F0F2F5" }} // Порожня частина
+              unselectedStyle={{ backgroundColor: Colors.inputBorder }} // Порожня частина
               // Стилізація твого кружечка (Marker)
               customMarker={() => <View style={styles.customMarkerStyle} />}
             />
@@ -199,7 +196,7 @@ export default function FiltersScreen() {
               snapped={true} // Приємне "магнітне" клацання по числах
               trackStyle={{ height: 8, borderRadius: 3 }}
               selectedStyle={{ backgroundColor: Colors.secondary }}
-              unselectedStyle={{ backgroundColor: "#F0F2F5" }}
+              unselectedStyle={{ backgroundColor: Colors.inputBorder }}
               // Використовуємо твій кастомний маркер (той самий стиль)
               customMarker={() => <View style={styles.customMarkerStyle} />}
             />
@@ -258,15 +255,22 @@ export default function FiltersScreen() {
         title="Save & Search"
         variant="pink"
         loading={isSaving}
-        onPress={async () => {
-          await handleSave();
-          console.log("Збережені фільтри:", user);
-          router.push("/swipes");
+        onPress={() => {
+          router.push("/swipes"); // Миттєво йдемо далі
+
+          handleSave().catch((err) => {
+            // Якщо фонове збереження не вдалося, показуємо Toast або Alert
+            Alert.alert(
+              "Error",
+              "We couldn't save your filters, but you can still browse.",
+            );
+            console.error(err);
+          });
         }}
       />
       <WelcomeModal
-        isVisible={showWelcome}
-        onClose={() => setShowWelcome(false)}
+        isVisible={!!isModalVisible}
+        onClose={() => setClosedLocally(true)}
       />
     </ScreenContainer>
   );
@@ -279,7 +283,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontFamily: "Raleway",
     fontSize: 28,
-    color: "#1A1F36",
+    color: Colors.textMain,
     marginBottom: 24,
     elevation: 4,
     letterSpacing: -0.5,
@@ -333,7 +337,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: "Raleway",
     fontSize: 16,
-    color: "#1A1F36",
+    color: Colors.textLight,
   },
   valueText: {
     fontSize: 16,

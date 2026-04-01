@@ -30,8 +30,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [storedId, setStoredId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
+  const [isStorageLoading, setIsStorageLoading] = useState(true);
   useEffect(() => {
     const loadStorageData = async () => {
       try {
@@ -40,7 +39,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } catch (e) {
         console.error("Failed to load userId", e);
       } finally {
-        setIsLoading(false);
+        setIsStorageLoading(false);
       }
     };
     loadStorageData();
@@ -51,7 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     api.users.getUser,
     storedId ? { id: storedId as Id<"users"> } : "skip",
   );
-
+  const isLoading = isStorageLoading || (!!storedId && dbUser === undefined);
   // 3. Коли дані з бази прийшли — синхронізуємо їх з локальним стейтом
   useEffect(() => {
     if (dbUser) {
@@ -60,8 +59,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         ...dbUser,
         ageRange: [dbUser.ageRange[0], dbUser.ageRange[1]] as [number, number],
       } as UserProfile);
+    } else if (dbUser === null && storedId && !isStorageLoading) {
+      // Якщо Convex відповів null (юзера немає в базі), чистимо все
+      setUser(null);
+      setStoredId(null);
     }
-  }, [dbUser]);
+  }, [dbUser, storedId, isStorageLoading]);
 
   // Початкові значення (ті самі, що ми малювали на екрані)
   const updatePreferences = (newPrefs: Partial<UserPreferences>) => {
