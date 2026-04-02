@@ -4,6 +4,7 @@ import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
+import { Colors } from "@/constants/Colors";
 
 const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!);
 
@@ -28,7 +29,7 @@ function NavigationData() {
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#FF4B8C" />
+        <ActivityIndicator size="large" color={Colors.secondary} />
       </View>
     );
   }

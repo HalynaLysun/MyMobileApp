@@ -81,7 +81,7 @@ export default function RegisterScreen() {
             />
 
             <AppButton
-              title="Log In"
+              title="Already have an account? Log In"
               variant="white"
               onPress={() => {
                 console.log("Go to Login");

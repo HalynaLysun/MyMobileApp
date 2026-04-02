@@ -127,3 +127,23 @@ export const markWelcomeAsSeen = mutation({
     await ctx.db.patch(args.id, { hasSeenWelcome: true });
   },
 });
+
+export const getUserForLogin = query({
+  args: {
+    email: v.string(),
+    password: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("email"), args.email))
+      .unique();
+
+    // Перевіряємо, чи існує юзер і чи збігається пароль
+    if (!user || user.password !== args.password) {
+      return null;
+    }
+
+    return user;
+  },
+});
