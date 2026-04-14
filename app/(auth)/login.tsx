@@ -11,9 +11,9 @@ import { useAuth } from "@/context/AuthContext";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useRouter } from "expo-router";
-// Використовуємо твій компонент
 import AppButton from "@/components/AppButton";
 import { Colors } from "@/constants/Colors";
+import ScreenContainer from "@/components/ScreenContainer";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -23,8 +23,7 @@ export default function LoginScreen() {
   const { login } = useAuth();
   const router = useRouter();
 
-  // Шукаємо юзера в базі
-  const userFromDb = useQuery(api.users.getUserForLogin, {
+  const userFromDb = useQuery(api.auth.getUserForLogin, {
     email: email.toLowerCase().trim(),
     password: password,
   });
@@ -40,7 +39,6 @@ export default function LoginScreen() {
     try {
       if (userFromDb) {
         await login({
-          id: userFromDb._id,
           ...userFromDb,
           ageRange: [userFromDb.ageRange[0], userFromDb.ageRange[1]],
         });
@@ -57,8 +55,8 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Вхід</Text>
+    <ScreenContainer>
+      <Text style={styles.title}>Log In</Text>
 
       <View style={styles.inputGroup}>
         <TextInput
@@ -72,7 +70,7 @@ export default function LoginScreen() {
 
         <TextInput
           style={styles.input}
-          placeholder="Пароль"
+          placeholder="Password"
           placeholderTextColor={Colors.textLight}
           value={password}
           onChangeText={setPassword}
@@ -82,7 +80,7 @@ export default function LoginScreen() {
 
       {/* Тільки твій AppButton */}
       <AppButton
-        title={isSubmitting ? "Завантаження..." : "Увійти"}
+        title={isSubmitting ? "Loading..." : "Log In"}
         onPress={handleLogin}
       />
 
@@ -92,10 +90,10 @@ export default function LoginScreen() {
         style={styles.footer}
       >
         <Text style={styles.footerText}>
-          Немає акаунту? <Text style={styles.link}>Зареєструватися</Text>
+          Don’t have an account? <Text style={styles.link}>Sign Up</Text>
         </Text>
       </Pressable>
-    </View>
+    </ScreenContainer>
   );
 }
 

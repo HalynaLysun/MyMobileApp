@@ -7,6 +7,21 @@ export type Intention =
   | "casual dating"
   | "friendship";
 
+export type UserGender = "male" | "female" | "non-binary";
+
+export interface TestAnswersMap {
+  q1: string[];
+  q2: string[];
+  q3: string[];
+  q4: string[];
+  q5: string[];
+  q6: string[];
+  q7: string[];
+  q8: string[];
+  q9: string[];
+  q10: string[];
+}
+
 export interface UserPreferences {
   gender: Gender;
   distance: number;
@@ -26,12 +41,18 @@ export const DEFAULT_USER_PREFERENCES: UserPreferences = {
 };
 
 export interface UserProfile extends UserPreferences {
-  id: Id<"users">;
+  _id: Id<"users">;
+  _creationTime: number;
   email: string;
+  password?: string;
   firstName: string;
   age: number;
-  userGender: "male" | "female" | "non-binary";
+  userGender: UserGender;
   city: string;
   bio?: string;
   photoUrl?: string;
+  createdAt: number;
+  hasSeenWelcome: boolean;
+  isTestPassed: boolean;
+  testAnswers?: TestAnswersMap;
 }

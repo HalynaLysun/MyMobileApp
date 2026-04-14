@@ -23,7 +23,7 @@ const Swipes = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const users = useQuery(api.users.getRandomUsers, {
-    currentUserId: user?.id as Id<"users">,
+    currentUserId: user?._id as Id<"users">,
     filters: {
       gender: user?.gender || "all",
       // Передаємо масив цілком. Якщо його нема — ставимо дефолт [18, 100]

@@ -1,38 +1,59 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Text, StyleSheet, Alert } from "react-native";
 import { useAuth } from "@/context/AuthContext"; // Імпортуємо наш хук
 import { useRouter } from "expo-router";
 import { Colors } from "@/constants/Colors";
+import AppButton from "@/components/AppButton";
+import ScreenContainer from "@/components/ScreenContainer";
 
 export default function ProfileScreen() {
   const { logout, user } = useAuth();
   const router = useRouter();
 
   const handleLogout = async () => {
-    await logout();
-    // Після логауту NavigationData в _layout.tsx
-    // автоматично побачить, що user === null, і перекине на Welcome.
+    try {
+      await logout();
+      // Використовуємо replace, щоб юзер не міг повернутися назад кнопкою "Back"
+      router.replace("/(auth)/login"); // Або шлях до твоєї реєстрації, наприклад "/register"
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
   };
 
+  const isTestComplete =
+    !!user?.testAnswers?.q10
+
   return (
-    <View style={styles.container}>
+    <ScreenContainer>
       <Text style={styles.title}>Профіль</Text>
 
       {user && <Text style={styles.email}>Ви залогінені як: {user.email}</Text>}
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutText}>Вийти з аккаунту</Text>
-      </TouchableOpacity>
-    </View>
+      <AppButton title="Log out" onPress={handleLogout} />
+      <AppButton
+        title={isTestComplete ? "Retake the Test" : "Take the Test"}
+        onPress={() =>
+        // {
+        //   if (isTestComplete) {
+        //     // Для "Retake" краще додати підтвердження, щоб не стерти дані випадково
+        //     Alert.alert(
+        //       "Retake Test",
+        //       "This will update your current matching preferences. Continue?",
+        //       [
+        //         { text: "Cancel", style: "cancel" },
+        //         { text: "Yes", onPress: () => router.push("/questions") },
+        //       ],
+        //     );
+        //   } else {
+            router.push("/questions")
+        //   }
+        // }
+      }
+      />
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: Colors.white,
-  },
   title: {
     fontSize: 24,
     fontWeight: "bold",

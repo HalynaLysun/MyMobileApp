@@ -1,14 +1,14 @@
 import { mutation, query } from "./_generated/server";
 import { v, Infer } from "convex/values";
 
-const intentionValidator = v.union(
+export const intentionValidator = v.union(
   v.literal("chatting"),
   v.literal("serious relationship"),
   v.literal("casual dating"),
   v.literal("friendship"),
 );
 
-const genderValidator = v.union(
+export const genderValidator = v.union(
   v.literal("male"),
   v.literal("female"),
   v.literal("all"),
@@ -22,65 +22,25 @@ const filtersDefinition = v.object({
 
 type FilterFields = Infer<typeof filtersDefinition>;
 
-export const register = mutation({
-  args: {
-    email: v.string(),
-    password: v.string(),
-    firstName: v.string(),
-    age: v.number(),
-    userGender: v.union(
-      v.literal("male"),
-      v.literal("female"),
-      v.literal("non-binary"),
-    ),
-    city: v.string(), // Додаємо city
-    createdAt: v.number(),
-    bio: v.optional(v.string()),
-    photoUrl: v.optional(v.string()),
-    distance: v.number(),
-    gender: genderValidator,
-    ageRange: v.array(v.number()),
-    intention: intentionValidator,
-  },
-  handler: async (ctx, args) => {
-    // Перевірка на дублікат
-    const existing = await ctx.db
-      .query("users")
-      .withIndex("by_email", (q) => q.eq("email", args.email))
-      .unique();
-
-    if (existing) {
-      throw new Error("This email is already registered");
-    }
-
-    const userId = await ctx.db.insert("users", {
-      ...args,
-      hasSeenWelcome: false,
-    });
-
-    // 3. ПОВЕРТАЄМО ВЕСЬ ОБ'ЄКТ (ось тут зміна)
-    return await ctx.db.get(userId);
-  },
-});
-
 export const updateFilters = mutation({
   args: {
-    id: v.id("users"),
+    _id: v.id("users"),
     gender: v.optional(genderValidator),
     distance: v.optional(v.number()),
     ageRange: v.optional(v.array(v.number())),
     intention: v.optional(intentionValidator),
+    hasSeenWelcome: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const { id, ...fields } = args;
-    await ctx.db.patch(id, fields); // Patch просто оновлює існуючі поля
+    const { _id, ...fields } = args;
+    await ctx.db.patch(_id, fields); // Patch просто оновлює існуючі поля
   },
 });
 
 export const getUser = query({
-  args: { id: v.id("users") },
+  args: { _id: v.id("users") },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
+    return await ctx.db.get(args._id);
   },
 });
 
@@ -122,28 +82,8 @@ export const getRandomUsers = query({
 });
 
 export const markWelcomeAsSeen = mutation({
-  args: { id: v.id("users") },
+  args: { _id: v.id("users") },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.id, { hasSeenWelcome: true });
-  },
-});
-
-export const getUserForLogin = query({
-  args: {
-    email: v.string(),
-    password: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const user = await ctx.db
-      .query("users")
-      .filter((q) => q.eq(q.field("email"), args.email))
-      .unique();
-
-    // Перевіряємо, чи існує юзер і чи збігається пароль
-    if (!user || user.password !== args.password) {
-      return null;
-    }
-
-    return user;
+    await ctx.db.patch(args._id, { hasSeenWelcome: true });
   },
 });

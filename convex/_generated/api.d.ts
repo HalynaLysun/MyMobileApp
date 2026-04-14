@@ -8,6 +8,9 @@
  * @module
  */
 
+import type * as auth from "../auth.js";
+import type * as matchs from "../matchs.js";
+import type * as questions from "../questions.js";
 import type * as users from "../users.js";
 
 import type {
@@ -17,6 +20,9 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  auth: typeof auth;
+  matchs: typeof matchs;
+  questions: typeof questions;
   users: typeof users;
 }>;
 

@@ -20,7 +20,7 @@ import { Colors } from "@/constants/Colors";
 export default function SetupProfileScreen() {
   const { email, password } = useLocalSearchParams(); // Отримуємо дані з Кроку 1
   const router = useRouter();
-  const registerUser = useMutation(api.users.register); // Твоя мутація в Convex
+  const registerUser = useMutation(api.auth.register); // Твоя мутація в Convex
   const { login } = useAuth();
 
   // Стейт для обов'язкових полів
@@ -68,7 +68,7 @@ export default function SetupProfileScreen() {
       if (fullUser) {
         login({
           ...fullUser,
-          id: fullUser._id, // переконайся, що мапиш _id у id, якщо твій UserProfile цього вимагає
+          _id: fullUser._id, // переконайся, що мапиш _id у id, якщо твій UserProfile цього вимагає
           ageRange: [fullUser.ageRange[0], fullUser.ageRange[1]] as [
             number,
             number,

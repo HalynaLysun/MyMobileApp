@@ -48,14 +48,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // 2. Отримуємо повні дані юзера з Convex, якщо знайшли ID в пам'яті
   const dbUser = useQuery(
     api.users.getUser,
-    storedId ? { id: storedId as Id<"users"> } : "skip",
+    storedId ? { _id: storedId as Id<"users"> } : "skip",
   );
   const isLoading = isStorageLoading || (!!storedId && dbUser === undefined);
   // 3. Коли дані з бази прийшли — синхронізуємо їх з локальним стейтом
   useEffect(() => {
     if (dbUser) {
       setUser({
-        id: dbUser._id,
         ...dbUser,
         ageRange: [dbUser.ageRange[0], dbUser.ageRange[1]] as [number, number],
       } as UserProfile);
@@ -76,7 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (userData: UserProfile) => {
     setUser(userData);
-    await AsyncStorage.setItem("userId", userData.id);
+    await AsyncStorage.setItem("userId", userData._id);
   };
 
   const logout = async () => {

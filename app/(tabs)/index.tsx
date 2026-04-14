@@ -27,6 +27,7 @@ export default function FiltersScreen() {
   const { gender, distance, ageRange, intention } =
     user || DEFAULT_USER_PREFERENCES;
   const [closedLocally, setClosedLocally] = useState(false);
+  const [modalShownInSession, setModalShownInSession] = useState(false);
 
   // const { newUser } = useLocalSearchParams();
 
@@ -40,7 +41,7 @@ export default function FiltersScreen() {
     setIsSaving(true);
     try {
       await update({
-        id: user?.id,
+        _id: user?._id,
         gender: user.gender,
         distance: user.distance,
         ageRange: user.ageRange,
@@ -57,11 +58,12 @@ export default function FiltersScreen() {
   // Запит виконається ТІЛЬКИ якщо user та user.id існують
   const userData = useQuery(
     api.users.getUser,
-    user?.id ? { id: user.id } : "skip",
+    user?._id ? { _id: user._id } : "skip",
   );
 
-  const isModalVisible =
-    userData && userData.hasSeenWelcome === false && !closedLocally;
+  const hasCompletedTest = userData?.hasSeenWelcome === true;
+
+ 
 
   useEffect(() => {
     // 2. Якщо дані прийшли з бази — записуємо їх у наш локальний стан (state)
@@ -75,6 +77,19 @@ export default function FiltersScreen() {
     }
     setIsLoaded(true);
   }, [userData, isLoaded, updatePreferences]);
+
+   const isModalVisible =
+     userData &&
+     userData.hasSeenWelcome === false &&
+     !closedLocally &&
+    !modalShownInSession;
+  
+  useEffect(() => {
+    if (isModalVisible) {
+      // Як тільки модалка стала видимою, ми "спалюємо" цей шанс для поточної сесії
+      setModalShownInSession(true);
+    }
+  }, [isModalVisible]);
 
   return (
     <ScreenContainer withScroll={true}>
@@ -214,26 +229,36 @@ export default function FiltersScreen() {
         <View style={styles.tagWrapper}>
           {[
             {
-              id: "chatting",
+              _id: "chatting",
               icon: "chatbubble-ellipses",
               label: "Just chatting",
             },
             {
-              id: "serious relationship",
+              _id: "serious relationship",
               icon: "heart-circle",
               label: "Serious relationship",
             },
-            { id: "casual dating", icon: "wine", label: "Casual dating" },
-            { id: "friendship", icon: "hand-left", label: "Friendship" },
+            { _id: "casual dating", icon: "wine", label: "Casual dating" },
+            { _id: "friendship", icon: "hand-left", label: "Friendship" },
           ].map((item) => (
             <AppButton
-              key={item.id}
+              key={item._id}
               title={item.label}
               variant="white"
-              isActive={intention === item.id}
-              onPress={() =>
-                updatePreferences({ intention: item.id as Intention })
-              }
+              isActive={intention === item._id}
+              onPress={() => {
+                if (item._id === "serious relationship") {
+                  // ЯКЩО ТЕСТ НЕ ПРОЙДЕНО — на питання
+                  // ЯКЩО ПРОЙДЕНО — просто ставимо інтенцію
+                  if (!hasCompletedTest) {
+                    router.push("/questions");
+                  } else {
+                    updatePreferences({ intention: "serious relationship" });
+                  }
+                } else {
+                  updatePreferences({ intention: item._id as Intention });
+                }
+              }}
               style={styles.tagButton}
               textSize={10}
               icon={
@@ -242,7 +267,7 @@ export default function FiltersScreen() {
                   size={16}
                   style={{ marginRight: 2 }}
                   color={
-                    intention === item.id ? Colors.white : Colors.secondary
+                    intention === item._id ? Colors.white : Colors.secondary
                   }
                 />
               }

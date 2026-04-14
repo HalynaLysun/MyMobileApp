@@ -28,6 +28,21 @@ export default defineSchema({
     ),
     createdAt: v.number(),
     hasSeenWelcome: v.boolean(),
+    isTestPassed: v.boolean(),
+    testAnswers: v.optional(
+      v.object({
+        q1: v.array(v.string()),
+        q2: v.array(v.string()),
+        q3: v.array(v.string()),
+        q4: v.array(v.string()),
+        q5: v.array(v.string()),
+        q6: v.array(v.string()),
+        q7: v.array(v.string()),
+        q8: v.array(v.string()),
+        q9: v.array(v.string()),
+        q10: v.array(v.string()),
+      }),
+    ),
     // updatedAt: v.optional(v.number()),
   }).index("by_email", ["email"]),
 });
