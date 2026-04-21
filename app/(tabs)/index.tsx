@@ -14,6 +14,7 @@ import { api } from "@/convex/_generated/api";
 import { useEffect, useState } from "react";
 import { DEFAULT_USER_PREFERENCES, Intention } from "@/types/user";
 import WelcomeModal from "@/components/WelcomeModal";
+import { INTENTIONS } from "@/constants/IntentionOptions";
 
 const iconList = Object.values(fas) as IconDefinition[];
 
@@ -27,7 +28,6 @@ export default function FiltersScreen() {
   const { gender, distance, ageRange, intention } =
     user || DEFAULT_USER_PREFERENCES;
   const [closedLocally, setClosedLocally] = useState(false);
-  const [modalShownInSession, setModalShownInSession] = useState(false);
 
   // const { newUser } = useLocalSearchParams();
 
@@ -63,33 +63,23 @@ export default function FiltersScreen() {
 
   const hasCompletedTest = userData?.hasSeenWelcome === true;
 
- 
-
   useEffect(() => {
     // 2. Якщо дані прийшли з бази — записуємо їх у наш локальний стан (state)
-    if (userData && !isLoaded) {
-      updatePreferences({
-        gender: userData.gender,
-        distance: userData.distance,
-        ageRange: [userData.ageRange[0], userData.ageRange[1]],
-        intention: userData.intention,
-      });
+    if (userData) {
+      if (!isLoaded) {
+        updatePreferences({
+          gender: userData.gender,
+          distance: userData.distance,
+          ageRange: [userData.ageRange[0], userData.ageRange[1]],
+          intention: userData.intention,
+        });
+        setIsLoaded(true);
+      }
     }
-    setIsLoaded(true);
   }, [userData, isLoaded, updatePreferences]);
 
-   const isModalVisible =
-     userData &&
-     userData.hasSeenWelcome === false &&
-     !closedLocally &&
-    !modalShownInSession;
-  
-  useEffect(() => {
-    if (isModalVisible) {
-      // Як тільки модалка стала видимою, ми "спалюємо" цей шанс для поточної сесії
-      setModalShownInSession(true);
-    }
-  }, [isModalVisible]);
+  const isModalVisible =
+    userData && userData.hasSeenWelcome === false && !closedLocally;
 
   return (
     <ScreenContainer withScroll={true}>
@@ -227,20 +217,7 @@ export default function FiltersScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>Match Intentions</Text>
         <View style={styles.tagWrapper}>
-          {[
-            {
-              _id: "chatting",
-              icon: "chatbubble-ellipses",
-              label: "Just chatting",
-            },
-            {
-              _id: "serious relationship",
-              icon: "heart-circle",
-              label: "Serious relationship",
-            },
-            { _id: "casual dating", icon: "wine", label: "Casual dating" },
-            { _id: "friendship", icon: "hand-left", label: "Friendship" },
-          ].map((item) => (
+          {INTENTIONS.map((item) => (
             <AppButton
               key={item._id}
               title={item.label}
@@ -263,7 +240,7 @@ export default function FiltersScreen() {
               textSize={10}
               icon={
                 <Ionicons
-                  name={item.icon as any}
+                  name={item.filterIcon as any}
                   size={16}
                   style={{ marginRight: 2 }}
                   color={

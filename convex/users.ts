@@ -87,3 +87,37 @@ export const markWelcomeAsSeen = mutation({
     await ctx.db.patch(args._id, { hasSeenWelcome: true });
   },
 });
+
+export const updateProfile = mutation({
+  args: {
+    firstName: v.optional(v.string()),
+    bio: v.optional(v.string()),
+    intention: v.optional(
+      v.union(
+        v.literal("chatting"),
+        v.literal("serious relationship"),
+        v.literal("casual dating"),
+        v.literal("friendship"),
+      ),
+    ),
+    email: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // const identity = await ctx.auth.getUserIdentity();
+    // if (!identity) throw new Error("Not authenticated");
+
+    // const email = identity.email;
+    // if (!email)
+    //   throw new Error("Email is required but not provided by identity");
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .unique();
+
+    if (!user) throw new Error("User not found");
+
+    await ctx.db.patch(user._id, args);
+    return { success: true };
+  },
+});

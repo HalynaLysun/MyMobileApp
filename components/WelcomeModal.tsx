@@ -18,10 +18,10 @@ export default function WelcomeModal({
   const markSeen = useMutation(api.users.markWelcomeAsSeen);
 
   const handlePress = async () => {
-    if (user?.id) {
+    if (user?._id) {
       try {
         // 1. Повідомляємо базу даних, що юзер бачив модалку
-        await markSeen({ id: user.id });
+        await markSeen({ _id: user._id });
       } catch (error) {
         console.error("Failed to mark welcome as seen:", error);
       }
