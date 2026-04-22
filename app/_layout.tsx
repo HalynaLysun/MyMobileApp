@@ -20,7 +20,7 @@ function NavigationData() {
 
     // Логіка перенаправлення
     if (!user && !inAuthGroup) {
-      router.replace("/(auth)/welcome");
+      router.replace("/(auth)/login");
     } else if (user && inAuthGroup) {
       router.replace("/(tabs)");
     }

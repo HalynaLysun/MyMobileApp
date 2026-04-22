@@ -22,15 +22,20 @@ const Swipes = () => {
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const users = useQuery(api.users.getRandomUsers, {
-    currentUserId: user?._id as Id<"users">,
-    filters: {
-      gender: user?.gender || "all",
-      // Передаємо масив цілком. Якщо його нема — ставимо дефолт [18, 100]
-      ageRange: user?.ageRange || [18, 100],
-      intention: user?.intention || "chatting",
-    },
-  });
+  const users = useQuery(
+    api.users.getRandomUsers,
+    user?._id
+      ? {
+          currentUserId: user?._id as Id<"users">,
+          filters: {
+            gender: user?.gender || "all",
+            // Передаємо масив цілком. Якщо його нема — ставимо дефолт [18, 100]
+            ageRange: user?.ageRange || [18, 100],
+            intention: user?.intention || "chatting",
+          },
+        }
+      : "skip",
+  );
 
   useEffect(() => {
     // Кожного разу, коли список користувачів змінюється (наприклад, через фільтри),

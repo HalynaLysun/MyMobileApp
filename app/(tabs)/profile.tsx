@@ -12,8 +12,6 @@ export default function ProfileScreen() {
   const executeLogout = async () => {
     try {
       await logout();
-      // Використовуємо replace, щоб юзер не міг повернутися назад кнопкою "Back"
-      router.replace("/login"); // Або шлях до твоєї реєстрації, наприклад "/register"
     } catch (error) {
       console.error("Logout failed", error);
     }

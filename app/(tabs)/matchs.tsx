@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -14,9 +14,12 @@ import ScreenContainer from "@/components/ScreenContainer";
 import AppButton from "@/components/AppButton";
 import { Colors } from "@/constants/Colors";
 import calculateMatchPercentage from "@/utils/matchsLogic";
-import { TestAnswersMap, UserProfile } from "@/types/user";
+import { TestAnswersMap } from "@/types/user";
+import { Doc } from "@/convex/_generated/dataModel";
 
-type MatchItem = UserProfile & { matchPercent: number };
+type MatchItem = Doc<"users"> & {
+  matchPercent: number;
+};
 
 export default function MatchesScreen() {
   const { user } = useAuth();
@@ -31,7 +34,7 @@ export default function MatchesScreen() {
 
     // Ми беремо те, що повернув Convex, і просто додаємо matchPercent
     return allUsers
-      .map((otherUser: UserProfile) => {
+      .map((otherUser): MatchItem => {
         const matchPercent = calculateMatchPercentage(
           user.testAnswers as TestAnswersMap,
           otherUser.testAnswers as TestAnswersMap,
@@ -78,7 +81,7 @@ export default function MatchesScreen() {
   );
 
   return (
-    <ScreenContainer>
+    <ScreenContainer withScroll={false}>
       <View style={styles.header}>
         <Text style={styles.title}>Your Matches</Text>
         <Text style={styles.subtitle}>
