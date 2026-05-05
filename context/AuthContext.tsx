@@ -7,8 +7,8 @@ import {
 } from "react";
 import {
   UserProfile,
-  UserPreferences,
   DEFAULT_USER_PREFERENCES,
+  UserFilters,
 } from "@/types/user";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Id } from "@/convex/_generated/dataModel";
@@ -19,8 +19,8 @@ import { api } from "@/convex/_generated/api";
 interface AuthContextType {
   user: UserProfile | null; // Тепер тут повна інформація про юзера
   isLoading: boolean;
-  preferences: UserPreferences;
-  updatePreferences: (newPrefs: Partial<UserPreferences>) => void;
+  preferences: UserFilters;
+  updatePreferences: (newPrefs: Partial<UserFilters>) => void;
   login: (userData: UserProfile) => Promise<void>; // Зробили асинхронним
   logout: () => Promise<void>; // Зробили асинхронним
 }
@@ -54,10 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // 3. Коли дані з бази прийшли — синхронізуємо їх з локальним стейтом
   useEffect(() => {
     if (dbUser) {
-      setUser({
-        ...dbUser,
-        ageRange: [dbUser.ageRange[0], dbUser.ageRange[1]] as [number, number],
-      } as UserProfile);
+      setUser(dbUser as UserProfile);
     } else if (dbUser === null && storedId && !isStorageLoading) {
       // Якщо Convex відповів null (юзера немає в базі), чистимо все
       setUser(null);
@@ -66,16 +63,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [dbUser, storedId, isStorageLoading]);
 
   // Початкові значення (ті самі, що ми малювали на екрані)
-  const updatePreferences = (newPrefs: Partial<UserPreferences>) => {
+  const updatePreferences = (newPrefs: Partial<UserFilters>) => {
     setUser((prev) => {
       if (!prev) return null;
-      return { ...prev, ...newPrefs };
+      return {
+        ...prev,
+        filters: {
+          ...(prev.filters || DEFAULT_USER_PREFERENCES),
+          ...newPrefs,
+        },
+      };
     });
   };
 
   const login = async (userData: UserProfile) => {
-    setUser(userData);
     await AsyncStorage.setItem("userId", userData._id);
+    setStoredId(userData._id);
+    setUser(userData);
   };
 
   const logout = async () => {
@@ -89,9 +93,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       value={{
         user,
         isLoading,
-        preferences: user
-          ? (user as UserPreferences)
-          : DEFAULT_USER_PREFERENCES,
+        preferences: user?.filters || DEFAULT_USER_PREFERENCES,
         updatePreferences,
         login,
         logout,

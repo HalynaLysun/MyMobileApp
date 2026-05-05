@@ -25,9 +25,11 @@ export default function FiltersScreen() {
   const router = useRouter();
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const { gender, distance, ageRange, intention } =
-    user || DEFAULT_USER_PREFERENCES;
+
   const [closedLocally, setClosedLocally] = useState(false);
+
+  const { preferences } = useAuth(); // Беремо вже готові преференси з контексту
+  const { gender, distance, ageRange, intention } = preferences;
 
   // const { newUser } = useLocalSearchParams();
 
@@ -41,11 +43,14 @@ export default function FiltersScreen() {
     setIsSaving(true);
     try {
       await update({
-        _id: user?._id,
-        gender: user.gender,
-        distance: user.distance,
-        ageRange: user.ageRange,
-        intention: user.intention,
+        _id: user._id,
+        // Всі налаштування мають бути всередині об'єкта filters
+        filters: {
+          gender: gender,
+          distance: distance,
+          ageRange: ageRange,
+          intention: intention,
+        },
       });
     } catch (error) {
       alert("Error saving settings");
@@ -64,17 +69,23 @@ export default function FiltersScreen() {
   const hasCompletedTest = userData?.hasSeenWelcome === true;
 
   useEffect(() => {
-    // 2. Якщо дані прийшли з бази — записуємо їх у наш локальний стан (state)
-    if (userData) {
-      if (!isLoaded) {
-        updatePreferences({
-          gender: userData.gender,
-          distance: userData.distance,
-          ageRange: [userData.ageRange[0], userData.ageRange[1]],
-          intention: userData.intention,
-        });
-        setIsLoaded(true);
-      }
+    // 1. Перевіряємо, чи прийшли дані і чи ми їх ще не завантажували
+    if (userData && !isLoaded) {
+      // 2. Безпечно дістаємо фільтри з userData (якщо їх немає, беремо дефолтні)
+      const userFilters = userData.filters || DEFAULT_USER_PREFERENCES;
+
+      updatePreferences({
+        gender: userFilters.gender,
+        distance: userFilters.distance,
+        // Використовуємо явне приведення до кортежу [number, number]
+        ageRange: [
+          userFilters.ageRange?.[0] ?? DEFAULT_USER_PREFERENCES.ageRange[0],
+          userFilters.ageRange?.[1] ?? DEFAULT_USER_PREFERENCES.ageRange[1],
+        ] as [number, number],
+        intention: userFilters.intention,
+      });
+
+      setIsLoaded(true);
     }
   }, [userData, isLoaded, updatePreferences]);
 
@@ -149,34 +160,6 @@ export default function FiltersScreen() {
         </View>
 
         {/* Секція для вибору дистанції з слайдером [cite: 2026-01-24] */}
-        <View style={styles.section}>
-          <View style={styles.labelRow}>
-            <Text style={styles.sectionLabel}>Distance</Text>
-            <Text style={styles.valueText}>{distance} km</Text>
-          </View>
-
-          <View style={styles.sliderWrapper}>
-            <MultiSlider
-              values={[distance]} // Очікує масив
-              sliderLength={250} // Підбери ширину під свій екран
-              onValuesChange={(v) => updatePreferences({ distance: v[0] })}
-              min={10}
-              max={100}
-              step={1}
-              // Стилізація лінії (Track)
-              trackStyle={{ height: 8, borderRadius: 3 }}
-              selectedStyle={{ backgroundColor: Colors.secondary }} // Заповнена частина
-              unselectedStyle={{ backgroundColor: Colors.inputBorder }} // Порожня частина
-              // Стилізація твого кружечка (Marker)
-              customMarker={() => <View style={styles.customMarkerStyle} />}
-            />
-          </View>
-
-          <View style={styles.labelRow}>
-            <Text style={styles.subLabel}>10 km</Text>
-            <Text style={styles.subLabel}>100 km</Text>
-          </View>
-        </View>
 
         <View style={styles.section}>
           <View style={styles.labelRow}>
@@ -259,6 +242,23 @@ export default function FiltersScreen() {
         loading={isSaving}
         onPress={() => {
           router.push("/swipes"); // Миттєво йдемо далі
+
+          handleSave().catch((err) => {
+            // Якщо фонове збереження не вдалося, показуємо Toast або Alert
+            Alert.alert(
+              "Error",
+              "We couldn't save your filters, but you can still browse.",
+            );
+            console.error(err);
+          });
+        }}
+      />
+      <AppButton
+        title="More Options"
+        variant="pink"
+        loading={isSaving}
+        onPress={() => {
+          router.push("/more-filters"); // Миттєво йдемо далі
 
           handleSave().catch((err) => {
             // Якщо фонове збереження не вдалося, показуємо Toast або Alert

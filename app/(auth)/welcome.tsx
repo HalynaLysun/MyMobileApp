@@ -27,7 +27,7 @@ export default function WelcomeScreen() {
         <AppButton
           title="Create Account"
           variant="pink"
-          onPress={() => router.push("/(auth)/register")}
+          onPress={() => router.push("/register")}
         />
       </View>
     </ScreenContainer>

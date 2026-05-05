@@ -18,13 +18,27 @@ export const saveTestResults = mutation({
     }),
   },
   handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+    if (!user) throw new Error("User not found");
+
     await ctx.db.patch(args.userId, {
       isTestPassed: true,
       testAnswers: args.testAnswers,
-      // Можна також оновити намір на "serious relationship",
-      // бо тест відкриває саме цю можливість
-      intention: "serious relationship",
+      updatedAt: Date.now(), // Додаємо мітку часу оновлення
+
+      // ЗМІНА: Оновлюємо намір у фільтрах (кого я шукаю)
+      filters: {
+        ...user.filters,
+        intention: "serious relationship",
+      },
+
+      // ЗМІНА: Оновлюємо намір у деталях (хто я)
+      details: {
+        ...user.details,
+        intention: "serious relationship",
+      },
     });
+
     return await ctx.db.get(args.userId);
   },
 });

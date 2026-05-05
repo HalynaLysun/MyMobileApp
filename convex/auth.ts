@@ -21,6 +21,13 @@ export const register = mutation({
     gender: genderValidator,
     ageRange: v.array(v.number()),
     intention: intentionValidator,
+    onlyNew: v.optional(v.boolean()),
+    verifiedOnly: v.optional(v.boolean()),
+    minHeight: v.optional(v.float64()),
+    maxHeight: v.optional(v.float64()),
+    smoking: v.optional(v.string()),
+    alcohol: v.optional(v.string()),
+    wantChildren: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     // Перевірка на дублікат
@@ -34,9 +41,39 @@ export const register = mutation({
     }
 
     const userId = await ctx.db.insert("users", {
-      ...args,
+      // КОРІНЬ: Сюди пишемо тільки загальні дані (згідно зі schema.ts)
+      email: args.email,
+      password: args.password,
+      firstName: args.firstName,
+      age: args.age,
+      userGender: args.userGender,
+      city: args.city,
+      createdAt: args.createdAt,
+      bio: args.bio,
+      photoUrl: args.photoUrl,
+      isVerified: false, // Нове поле зі схеми (дефолтно false)
       hasSeenWelcome: false,
       isTestPassed: false,
+
+      // ЗМІНА: Групуємо дані у вкладений об'єкт filters
+      filters: {
+        gender: args.gender,
+        distance: args.distance,
+        ageRange: args.ageRange,
+        intention: args.intention,
+        verifiedOnly: false, // Додаємо обов'язкове поле зі схеми
+        onlyNew: false, // Додаємо обов'язкове поле зі схеми
+        minHeight: args.minHeight,
+        maxHeight: args.maxHeight,
+        smoking: args.smoking,
+        alcohol: args.alcohol,
+        wantChildren: args.wantChildren,
+      },
+
+      // ЗМІНА: Створюємо вкладений об'єкт details (анкета)
+      details: {
+        intention: args.intention,
+      },
     });
 
     // 3. ПОВЕРТАЄМО ВЕСЬ ОБ'ЄКТ (ось тут зміна)
@@ -52,7 +89,7 @@ export const getUserForLogin = query({
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
-      .filter((q) => q.eq(q.field("email"), args.email))
+      .withIndex("by_email", (q) => q.eq("email", args.email))
       .unique();
 
     // Перевіряємо, чи існує юзер і чи збігається пароль

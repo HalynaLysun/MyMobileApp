@@ -31,7 +31,7 @@ export default function RegisterScreen() {
     }
 
     router.push({
-      pathname: "/(auth)/setupProfile",
+      pathname: "/setupProfile",
       params: { email, password },
     });
   };
@@ -85,7 +85,7 @@ export default function RegisterScreen() {
               variant="white"
               onPress={() => {
                 console.log("Go to Login");
-                router.push("/(auth)/login");
+                router.push("/login");
               }}
             />
           </View>

@@ -14,6 +14,7 @@ import { useRouter } from "expo-router";
 import AppButton from "@/components/AppButton";
 import { Colors } from "@/constants/Colors";
 import ScreenContainer from "@/components/ScreenContainer";
+import { UserProfile } from "@/types/user";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -38,17 +39,13 @@ export default function LoginScreen() {
 
     try {
       if (userFromDb) {
-        await login({
-          ...userFromDb,
-          ageRange: [userFromDb.ageRange[0], userFromDb.ageRange[1]],
-        });
-        router.replace("/(tabs)");
+        await login(userFromDb as UserProfile);
       } else {
         // Якщо запит повернув null — значить дані невірні
         Alert.alert("Помилка", "Невірний email або пароль");
       }
     } catch (error) {
-      Alert.alert("Помилка", "Щось пішло не так");
+      Alert.alert("An error occurred during login");
     } finally {
       setIsSubmitting(false);
     }
@@ -85,10 +82,7 @@ export default function LoginScreen() {
       />
 
       {/* Для простого тексту-посилання краще Pressable без зайвих ефектів */}
-      <Pressable
-        onPress={() => router.push("/(auth)/register")}
-        style={styles.footer}
-      >
+      <Pressable onPress={() => router.push("/register")} style={styles.footer}>
         <Text style={styles.footerText}>
           Don’t have an account? <Text style={styles.link}>Sign Up</Text>
         </Text>

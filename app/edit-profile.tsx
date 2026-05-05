@@ -25,23 +25,38 @@ export default function EditProfileScreen() {
   // Стейт для редагування
   const [firstName, setFirstName] = useState(user?.firstName || "");
   const [bio, setBio] = useState(user?.bio || "");
-  const [intention, setIntention] = useState(user?.intention || "chatting");
+  const [intention, setIntention] = useState(
+    user?.details?.intention || user?.filters?.intention || "chatting",
+  );
+  const [height, setHeight] = useState(
+    user?.details?.height ? user.details.height.toString() : "",
+  );
+  const [zodiac, setZodiac] = useState(user?.details?.zodiac || "");
 
   const handleSave = async () => {
-    if (!user || !user.email) {
+    if (!user?._id) {
       alert("User data not loaded");
       return;
     }
 
     try {
+      const profileDetails = {
+        height: height ? parseInt(height) : null,
+        zodiac: zodiac || "", // Використовуємо порожній рядок замість undefined
+        // Сюди в майбутньому просто допишеш smoking: "no" і т.д.
+        // І тобі НЕ треба буде міняти users.ts!
+      };
       await updateProfile({
+        _id: user._id,
         firstName,
         bio,
         intention,
-        email: user.email, // TypeScript підхопить типи з Convex
+        details: profileDetails,
+
+        // TypeScript підхопить типи з Convex
       });
 
-      if (updatePreferences) {
+      if (typeof updatePreferences === "function") {
         updatePreferences({
           intention,
         });
@@ -50,7 +65,9 @@ export default function EditProfileScreen() {
       router.back();
     } catch (error) {
       console.error("Save failed:", error);
-      alert("Could not update profile.");
+      alert(
+        `Could not update profile: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   };
 
@@ -119,6 +136,29 @@ export default function EditProfileScreen() {
           />
         </View>
 
+        <View style={styles.rowInputs}>
+          <View style={[styles.inputGroup, { flex: 1 }]}>
+            <Text style={styles.label}>Height (cm)</Text>
+            <TextInput
+              style={styles.input}
+              value={height}
+              onChangeText={setHeight}
+              placeholder="175"
+              keyboardType="numeric"
+            />
+          </View>
+          <View style={{ width: 15 }} />
+          <View style={[styles.inputGroup, { flex: 1 }]}>
+            <Text style={styles.label}>Zodiac</Text>
+            <TextInput
+              style={styles.input}
+              value={zodiac}
+              onChangeText={setZodiac}
+              placeholder="Leo"
+            />
+          </View>
+        </View>
+
         <AppButton title="Save Changes" onPress={handleSave} />
 
         <TouchableOpacity
@@ -157,6 +197,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.inputBorder,
   },
   bioInput: { height: 120, textAlignVertical: "top" },
+  rowInputs: { flexDirection: "row" },
   intentionGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   intentionCard: {
     flexDirection: "row",

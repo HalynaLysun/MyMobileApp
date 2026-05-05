@@ -8,7 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@/context/AuthContext";
@@ -19,7 +19,6 @@ import { Colors } from "@/constants/Colors";
 
 export default function SetupProfileScreen() {
   const { email, password } = useLocalSearchParams(); // Отримуємо дані з Кроку 1
-  const router = useRouter();
   const registerUser = useMutation(api.auth.register); // Твоя мутація в Convex
   const { login } = useAuth();
 
@@ -66,16 +65,26 @@ export default function SetupProfileScreen() {
       // 3. Записуємо в Convex
       const fullUser = await registerUser(userData);
       if (fullUser) {
-        login({
+        const safeFilters = {
+          ...DEFAULT_USER_PREFERENCES,
+          ...(fullUser.filters || {}),
+          // Явно кажемо ТS, що це кортеж із двох чисел
+          ageRange: [
+            fullUser.filters?.ageRange?.[0] ??
+              DEFAULT_USER_PREFERENCES.ageRange[0],
+            fullUser.filters?.ageRange?.[1] ??
+              DEFAULT_USER_PREFERENCES.ageRange[1],
+          ] as [number, number],
+        };
+
+        // 2. Збираємо повний профіль
+        const formattedUser = {
           ...fullUser,
-          _id: fullUser._id, // переконайся, що мапиш _id у id, якщо твій UserProfile цього вимагає
-          ageRange: [fullUser.ageRange[0], fullUser.ageRange[1]] as [
-            number,
-            number,
-          ],
-        } as UserProfile);
+          filters: safeFilters,
+        } as UserProfile;
+
+        await login(formattedUser);
       }
-      router.replace("/(tabs)");
     } catch (err) {
       Alert.alert(
         "Registration Failed",

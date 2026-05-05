@@ -20,9 +20,9 @@ function NavigationData() {
 
     // Логіка перенаправлення
     if (!user && !inAuthGroup) {
-      router.replace("/(auth)/login");
+      router.replace("/login");
     } else if (user && inAuthGroup) {
-      router.replace("/(tabs)");
+      router.replace("/");
     }
   }, [user, isLoading, segments, router]);
 
@@ -34,12 +34,7 @@ function NavigationData() {
     );
   }
 
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="(auth)" />
-    </Stack>
-  );
+  return <Stack screenOptions={{ headerShown: false }}></Stack>;
 }
 
 export default function RootLayout() {

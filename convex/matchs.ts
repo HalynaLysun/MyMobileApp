@@ -7,11 +7,8 @@ export const getOtherUsers = query({
     if (!args.userId) return [];
 
     // Беремо всіх юзерів, крім поточного
-    const users = await ctx.db
-      .query("users")
-      .filter((q) => q.neq(q.field("_id"), args.userId))
-      .collect();
+    const users = await ctx.db.query("users").collect();
 
-    return users;
+    return users.filter((user) => user._id !== args.userId);
   },
 });
