@@ -41,7 +41,7 @@ export default function EditProfileScreen() {
 
     try {
       const profileDetails = {
-        height: height ? parseInt(height) : null,
+        ...(height ? { height: parseInt(height) } : {}),
         zodiac: zodiac || "",
         intention: intention,
         // Сюди в майбутньому просто допишеш smoking: "no" і т.д.
