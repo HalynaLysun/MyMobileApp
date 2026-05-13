@@ -13,6 +13,7 @@ export default defineSchema({
       v.literal("female"),
       v.literal("non-binary"),
     ), //
+    intention: v.optional(v.string()),
     city: v.string(),
     createdAt: v.number(),
     hasSeenWelcome: v.boolean(),

@@ -12,7 +12,7 @@ import {
 } from "@/types/user";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Id } from "@/convex/_generated/dataModel";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 // 1. Визначаємо, які саме дані ми будемо зберігати (Interface)
 
@@ -21,6 +21,7 @@ interface AuthContextType {
   isLoading: boolean;
   preferences: UserFilters;
   updatePreferences: (newPrefs: Partial<UserFilters>) => void;
+  updateUserProfile: (args: UserProfile) => Promise<void>;
   login: (userData: UserProfile) => Promise<void>; // Зробили асинхронним
   logout: () => Promise<void>; // Зробили асинхронним
 }
@@ -31,6 +32,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [storedId, setStoredId] = useState<string | null>(null);
   const [isStorageLoading, setIsStorageLoading] = useState(true);
+
   useEffect(() => {
     const loadStorageData = async () => {
       try {
@@ -53,17 +55,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isLoading = isStorageLoading || (!!storedId && dbUser === undefined);
   // 3. Коли дані з бази прийшли — синхронізуємо їх з локальним стейтом
   useEffect(() => {
-    if (dbUser) {
+    if (dbUser && JSON.stringify(dbUser) !== JSON.stringify(user)) {
       setUser(dbUser as UserProfile);
     } else if (dbUser === null && storedId && !isStorageLoading) {
       // Якщо Convex відповів null (юзера немає в базі), чистимо все
       setUser(null);
       setStoredId(null);
     }
-  }, [dbUser, storedId, isStorageLoading]);
+  }, [dbUser, storedId, isStorageLoading, user]);
+
+  const convexUpdateProfile = useMutation(api.users.updateProfile);
 
   // Початкові значення (ті самі, що ми малювали на екрані)
-  const updatePreferences = (newPrefs: Partial<UserFilters>) => {
+  const updatePreferences = async (newPrefs: Partial<UserFilters>) => {
+    if (!user?._id) return;
+
     setUser((prev) => {
       if (!prev) return null;
       return {
@@ -74,6 +80,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         },
       };
     });
+
+    try {
+      // 2. Відправляємо в базу даних
+      // Тепер кожна зміна фільтрів буде автоматично летіти на сервер
+      await convexUpdateProfile({
+        _id: user._id as Id<"users">,
+        filters: newPrefs,
+      });
+      console.log("Preferences synced with DB");
+    } catch (error) {
+      console.error("Failed to sync preferences:", error);
+      // Можна додати логіку відкату (rollback), якщо база не прийняла зміни
+    }
+  };
+
+  const updateUserProfile = async (args: any) => {
+    if (!user?._id) return;
+
+    // 1. ОПТИМІСТИЧНЕ ОНОВЛЕННЯ
+    // Ми вручну міняємо setUser, не чекаючи відповіді від бази
+    setUser((prev) => {
+      if (!prev) return null;
+      const updatedUser = {
+        ...prev,
+        ...args,
+        details: { ...(prev.details || {}), ...(args.details || {}) },
+        filters: { ...(prev.filters || {}), ...(args.filters || {}) },
+      };
+      return updatedUser;
+    });
+
+    // 2. ВИКЛИК ТВОЄЇ МУТАЦІЇ
+    try {
+      await convexUpdateProfile(args);
+    } catch (e) {
+      console.error("Помилка синхронізації з базою", e);
+      // Тут можна додати логіку відкату до старих даних, якщо база видала помилку
+    }
   };
 
   const login = async (userData: UserProfile) => {
@@ -87,7 +131,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setStoredId(null);
     await AsyncStorage.removeItem("userId");
   };
-
+  console.log("CURRENT USER IN CONTEXT:", user?.details?.intention);
   return (
     <AuthContext.Provider
       value={{
@@ -95,6 +139,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isLoading,
         preferences: user?.filters || DEFAULT_USER_PREFERENCES,
         updatePreferences,
+        updateUserProfile,
         login,
         logout,
       }}

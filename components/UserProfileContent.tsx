@@ -13,7 +13,7 @@ export default function UserProfileContent({ user }: UserProfileContentProps) {
   // const isSerious = user?.intention === "serious relationship";
 
   const intentionData =
-    INTENTIONS.find((i) => i._id === user?.intention) || INTENTIONS[2]; // дефолт chatting
+    INTENTIONS.find((i) => i._id === user?.details?.intention) || INTENTIONS[2]; // дефолт chatting
 
   return (
     <View style={styles.container}>

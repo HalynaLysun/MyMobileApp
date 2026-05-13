@@ -26,7 +26,7 @@ export default function EditProfileScreen() {
   const [firstName, setFirstName] = useState(user?.firstName || "");
   const [bio, setBio] = useState(user?.bio || "");
   const [intention, setIntention] = useState(
-    user?.details?.intention || user?.filters?.intention || "chatting",
+    user?.details?.intention || "chatting",
   );
   const [height, setHeight] = useState(
     user?.details?.height ? user.details.height.toString() : "",
@@ -42,7 +42,8 @@ export default function EditProfileScreen() {
     try {
       const profileDetails = {
         height: height ? parseInt(height) : null,
-        zodiac: zodiac || "", // Використовуємо порожній рядок замість undefined
+        zodiac: zodiac || "",
+        intention: intention,
         // Сюди в майбутньому просто допишеш smoking: "no" і т.д.
         // І тобі НЕ треба буде міняти users.ts!
       };
@@ -50,17 +51,15 @@ export default function EditProfileScreen() {
         _id: user._id,
         firstName,
         bio,
-        intention,
         details: profileDetails,
 
         // TypeScript підхопить типи з Convex
       });
 
-      if (typeof updatePreferences === "function") {
-        updatePreferences({
-          intention,
-        });
-      }
+      await updatePreferences({
+        intention,
+      });
+
       alert("Profile updated successfully!");
       router.back();
     } catch (error) {

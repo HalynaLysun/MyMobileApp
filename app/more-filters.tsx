@@ -43,16 +43,14 @@ export default function MoreFiltersScreen() {
     personalityType: user?.filters?.personalityType ?? [],
   });
 
-  const updateField = <K extends keyof MoreFilters>(
-    field: K,
-    value: MoreFilters[K],
-  ) => {
-    setFilters((prev) => ({ ...prev, [field]: value }));
+  const updateField = (partialFilters: Partial<MoreFilters>) => {
+    setFilters((prev) => ({ ...prev, ...partialFilters }));
   };
 
   const handleSave = async () => {
+    console.log("Sending filters to DB:", filters);
     // Використовуємо твій метод з AuthContext
-    await updatePreferences({ ...filters });
+    await updatePreferences(filters);
     router.back();
   };
 
@@ -70,7 +68,7 @@ export default function MoreFiltersScreen() {
           <MultiSlider
             values={[filters.distance]}
             sliderLength={280}
-            onValuesChange={(v) => updateField("distance", v[0])}
+            onValuesChange={(v) => updateField({ distance: v[0] })}
             min={10}
             max={100}
             step={1}
@@ -95,8 +93,7 @@ export default function MoreFiltersScreen() {
             values={[filters.minHeight || 150, filters.maxHeight || 210]}
             sliderLength={280}
             onValuesChange={(v) => {
-              updateField("minHeight", v[0]);
-              updateField("maxHeight", v[1]);
+              updateField({ minHeight: v[0], maxHeight: v[1] });
             }}
             min={140}
             max={220}
@@ -114,7 +111,7 @@ export default function MoreFiltersScreen() {
         <Text style={styles.label}>Verified profiles only</Text>
         <Switch
           value={filters.verifiedOnly}
-          onValueChange={(val) => updateField("verifiedOnly", val)}
+          onValueChange={(val) => updateField({ verifiedOnly: val })}
           trackColor={{ false: Colors.inputBorder, true: Colors.secondary }}
         />
       </View>
@@ -123,7 +120,7 @@ export default function MoreFiltersScreen() {
         <Text style={styles.label}>Only new users</Text>
         <Switch
           value={filters.onlyNew}
-          onValueChange={(val) => updateField("onlyNew", val)}
+          onValueChange={(val) => updateField({ onlyNew: val })}
           trackColor={{ false: Colors.inputBorder, true: Colors.secondary }}
         />
       </View>
@@ -139,7 +136,7 @@ export default function MoreFiltersScreen() {
                 styles.chip,
                 filters.smoking === opt && styles.chipActive,
               ]}
-              onPress={() => updateField("smoking", opt)}
+              onPress={() => updateField({ smoking: opt })}
             >
               <Text
                 style={[
