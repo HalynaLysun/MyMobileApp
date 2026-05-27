@@ -9,6 +9,7 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as chat from "../chat.js";
 import type * as matchs from "../matchs.js";
 import type * as questions from "../questions.js";
 import type * as users from "../users.js";
@@ -21,6 +22,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  chat: typeof chat;
   matchs: typeof matchs;
   questions: typeof questions;
   users: typeof users;

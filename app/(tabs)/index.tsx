@@ -7,7 +7,7 @@ import { fas } from "@fortawesome/free-solid-svg-icons";
 // import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
 import { useRouter } from "expo-router";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { useAuth } from "@/context/AuthContext";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -21,10 +21,9 @@ const iconList = Object.values(fas) as IconDefinition[];
 library.add(...iconList);
 
 export default function FiltersScreen() {
-  const { user, updatePreferences } = useAuth();
+  const { user, updatePreferences, isSaving } = useAuth();
   const router = useRouter();
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
 
   const [closedLocally, setClosedLocally] = useState(false);
 
@@ -40,7 +39,7 @@ export default function FiltersScreen() {
       alert("Error: User not found");
       return;
     }
-    setIsSaving(true);
+
     try {
       await update({
         _id: user._id,
@@ -55,8 +54,6 @@ export default function FiltersScreen() {
     } catch (error) {
       alert("Error saving settings");
       console.log(error);
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -71,6 +68,7 @@ export default function FiltersScreen() {
   useEffect(() => {
     // 1. Перевіряємо, чи прийшли дані і чи ми їх ще не завантажували
     if (userData && !isLoaded) {
+      setIsLoaded(true);
       // 2. Безпечно дістаємо фільтри з userData (якщо їх немає, беремо дефолтні)
       const userFilters = userData.filters || DEFAULT_USER_PREFERENCES;
 
@@ -84,8 +82,6 @@ export default function FiltersScreen() {
         ] as [number, number],
         intention: userFilters.intention,
       });
-
-      setIsLoaded(true);
     }
   }, [userData, isLoaded, updatePreferences]);
 
@@ -178,7 +174,7 @@ export default function FiltersScreen() {
                 updatePreferences({ ageRange: [v[0], v[1]] })
               } // Оновлюємо весь масив [min, max]
               min={18}
-              max={60}
+              max={90}
               step={1}
               allowOverlap={false} // Щоб бігунці не "наїжджали" один на одного
               snapped={true} // Приємне "магнітне" клацання по числах
@@ -192,7 +188,7 @@ export default function FiltersScreen() {
 
           <View style={styles.labelRow}>
             <Text style={styles.subLabel}>18</Text>
-            <Text style={styles.subLabel}>60</Text>
+            <Text style={styles.subLabel}>90</Text>
           </View>
         </View>
       </View>
@@ -245,10 +241,7 @@ export default function FiltersScreen() {
 
           handleSave().catch((err) => {
             // Якщо фонове збереження не вдалося, показуємо Toast або Alert
-            Alert.alert(
-              "Error",
-              "We couldn't save your filters, but you can still browse.",
-            );
+            alert("We couldn't save your filters, but you can still browse.");
             console.error(err);
           });
         }}
@@ -262,10 +255,7 @@ export default function FiltersScreen() {
 
           handleSave().catch((err) => {
             // Якщо фонове збереження не вдалося, показуємо Toast або Alert
-            Alert.alert(
-              "Error",
-              "We couldn't save your filters, but you can still browse.",
-            );
+            alert("We couldn't save your filters, but you can still browse.");
             console.error(err);
           });
         }}

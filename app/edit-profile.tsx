@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -6,21 +6,20 @@ import {
   ScrollView,
   View,
   TouchableOpacity,
+  Image,
 } from "react-native";
 import { useAuth } from "@/context/AuthContext";
-import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { useRouter } from "expo-router";
 import AppButton from "@/components/AppButton";
 import ScreenContainer from "@/components/ScreenContainer";
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { INTENTIONS } from "@/constants/IntentionOptions";
+import * as ImagePicker from "expo-image-picker";
 
 export default function EditProfileScreen() {
-  const { user, updatePreferences } = useAuth();
+  const { user, updatePreferences, updateUserProfile, isSaving } = useAuth();
   const router = useRouter();
-  const updateProfile = useMutation(api.users.updateProfile);
 
   // Стейт для редагування
   const [firstName, setFirstName] = useState(user?.firstName || "");
@@ -32,6 +31,28 @@ export default function EditProfileScreen() {
     user?.details?.height ? user.details.height.toString() : "",
   );
   const [zodiac, setZodiac] = useState(user?.details?.zodiac || "");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(
+    user?.photoUrl || null,
+  );
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      alert("We need access to your gallery to change the photo.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: "images",
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setPhotoUrl(result.assets[0].uri);
+    }
+  };
 
   const handleSave = async () => {
     if (!user?._id) {
@@ -47,10 +68,11 @@ export default function EditProfileScreen() {
         // Сюди в майбутньому просто допишеш smoking: "no" і т.д.
         // І тобі НЕ треба буде міняти users.ts!
       };
-      await updateProfile({
+      await updateUserProfile({
         _id: user._id,
         firstName,
         bio,
+        photoUrl: photoUrl || undefined,
         details: profileDetails,
 
         // TypeScript підхопить типи з Convex
@@ -77,6 +99,26 @@ export default function EditProfileScreen() {
         contentContainerStyle={{ paddingBottom: 40 }}
       >
         <Text style={styles.headerTitle}>Edit Profile</Text>
+
+        <View style={styles.photoSection}>
+          <TouchableOpacity
+            onPress={pickImage}
+            activeOpacity={0.8}
+            style={styles.avatarWrapper}
+          >
+            {photoUrl ? (
+              <Image source={{ uri: photoUrl }} style={styles.avatar} />
+            ) : (
+              <View style={[styles.avatar, styles.placeholderAvatar]}>
+                <Ionicons name="camera" size={32} color={Colors.secondary} />
+              </View>
+            )}
+            <View style={styles.editBadge}>
+              <Ionicons name="pencil" size={14} color="white" />
+            </View>
+          </TouchableOpacity>
+          <Text style={styles.photoHint}>Tap to change profile picture</Text>
+        </View>
 
         {/* First Name */}
         <View style={styles.inputGroup}>
@@ -158,7 +200,11 @@ export default function EditProfileScreen() {
           </View>
         </View>
 
-        <AppButton title="Save Changes" onPress={handleSave} />
+        <AppButton
+          title="Save Changes"
+          onPress={handleSave}
+          loading={isSaving}
+        />
 
         <TouchableOpacity
           onPress={() => router.back()}
@@ -177,6 +223,41 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     marginBottom: 25,
     color: Colors.textMain,
+  },
+  photoSection: { alignItems: "center", marginBottom: 30 },
+  avatarWrapper: { position: "relative" },
+  avatar: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    borderWidth: 3,
+    borderColor: Colors.primary,
+  },
+  placeholderAvatar: {
+    backgroundColor: Colors.inputBack,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: Colors.inputBorder,
+  },
+  editBadge: {
+    position: "absolute",
+    bottom: 2,
+    right: 2,
+    backgroundColor: Colors.primary,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "white",
+  },
+  photoHint: {
+    fontSize: 13,
+    color: Colors.textLight,
+    marginTop: 8,
+    fontWeight: "500",
   },
   inputGroup: { marginBottom: 24 },
   label: {

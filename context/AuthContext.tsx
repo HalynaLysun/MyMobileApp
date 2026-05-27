@@ -16,12 +16,17 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 // 1. Визначаємо, які саме дані ми будемо зберігати (Interface)
 
+interface UpdateProfileArgs extends Partial<UserProfile> {
+  _id: Id<"users">;
+}
+
 interface AuthContextType {
   user: UserProfile | null; // Тепер тут повна інформація про юзера
   isLoading: boolean;
+  isSaving: boolean;
   preferences: UserFilters;
   updatePreferences: (newPrefs: Partial<UserFilters>) => void;
-  updateUserProfile: (args: UserProfile) => Promise<void>;
+  updateUserProfile: (args: UpdateProfileArgs) => Promise<void>;
   login: (userData: UserProfile) => Promise<void>; // Зробили асинхронним
   logout: () => Promise<void>; // Зробили асинхронним
 }
@@ -32,6 +37,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [storedId, setStoredId] = useState<string | null>(null);
   const [isStorageLoading, setIsStorageLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const loadStorageData = async () => {
@@ -70,32 +76,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const updatePreferences = async (newPrefs: Partial<UserFilters>) => {
     if (!user?._id) return;
 
-    setUser((prev) => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        filters: {
-          ...(prev.filters || DEFAULT_USER_PREFERENCES),
-          ...newPrefs,
-        },
-      };
-    });
+    // setUser((prev) => {
+    //   if (!prev) return null;
+    //   return {
+    //     ...prev,
+    //     filters: {
+    //       ...(prev.filters || DEFAULT_USER_PREFERENCES),
+    //       ...newPrefs,
+    //     },
+    //   };
+    // });
 
     try {
+      setIsSaving(true);
+
+      const { hasSeenWelcome, ...cleanFilters } = newPrefs as any;
       // 2. Відправляємо в базу даних
       // Тепер кожна зміна фільтрів буде автоматично летіти на сервер
       await convexUpdateProfile({
         _id: user._id as Id<"users">,
-        filters: newPrefs,
+        filters: cleanFilters,
       });
       console.log("Preferences synced with DB");
     } catch (error) {
       console.error("Failed to sync preferences:", error);
       // Можна додати логіку відкату (rollback), якщо база не прийняла зміни
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const updateUserProfile = async (args: any) => {
+  const updateUserProfile = async (args: UpdateProfileArgs) => {
     if (!user?._id) return;
 
     // 1. ОПТИМІСТИЧНЕ ОНОВЛЕННЯ
@@ -113,10 +124,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // 2. ВИКЛИК ТВОЄЇ МУТАЦІЇ
     try {
-      await convexUpdateProfile(args);
+      setIsSaving(true);
+      const { _id, firstName, bio, photoUrl, details } = args;
+      await convexUpdateProfile({ _id, firstName, bio, photoUrl, details });
     } catch (e) {
       console.error("Помилка синхронізації з базою", e);
       // Тут можна додати логіку відкату до старих даних, якщо база видала помилку
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -137,6 +152,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       value={{
         user,
         isLoading,
+        isSaving,
         preferences: user?.filters || DEFAULT_USER_PREFERENCES,
         updatePreferences,
         updateUserProfile,

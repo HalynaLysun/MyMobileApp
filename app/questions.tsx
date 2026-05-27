@@ -18,10 +18,9 @@ import { Colors } from "@/constants/Colors";
 
 export default function QuestionsScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, updatePreferences } = useAuth();
 
   const saveResults = useMutation(api.questions.saveTestResults);
-  const update = useMutation(api.users.updateFilters);
 
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,7 +60,7 @@ export default function QuestionsScreen() {
   const handleNext = async () => {
     const questionId = currentQuestion.id as keyof TestAnswers;
     if (answers[questionId].length === 0) {
-      Alert.alert("Attention", "Please select at least one option.");
+      alert("Please select at least one option.");
       return;
     }
 
@@ -79,9 +78,7 @@ export default function QuestionsScreen() {
           testAnswers: answers,
         });
 
-        await update({
-          _id: user?._id,
-          hasSeenWelcome: true,
+        await updatePreferences({
           intention: "serious relationship",
           gender: "all",
           ageRange: [18, 100],
@@ -103,7 +100,7 @@ export default function QuestionsScreen() {
         // );
       } catch (error) {
         setIsSubmitting(false);
-        Alert.alert("Error", "Could not save results. Please try again.");
+        alert("Could not save results. Please try again.");
       }
     }
   };

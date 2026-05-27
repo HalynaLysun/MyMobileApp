@@ -16,16 +16,19 @@ export default function ScreenContainer({
   const insets = useSafeAreaInsets(); // Отримуємо динамічні відступи
 
   const renderContent = () => {
-    const containerStyle = [
-      styles.content,
-      {
-        paddingTop: insets.top,
-        paddingBottom: insets.bottom,
-      },
-    ];
-
+    // const containerStyle = [
+    //   styles.content,
+    //   {
+    //     paddingTop: insets.top,
+    //     paddingBottom: insets.bottom,
+    //   },
+    // ];
+    const edgeInsets = {
+      paddingTop: insets.top,
+      paddingBottom: insets.bottom,
+    };
     if (!withScroll) {
-      return <View style={containerStyle}>{children}</View>;
+      return <View style={[{ flex: 1 }, edgeInsets]}>{children}</View>;
     }
 
     return (
@@ -33,7 +36,7 @@ export default function ScreenContainer({
         contentContainerStyle={styles.scrollContent}
         style={{ flex: 1 }}
       >
-        <View style={containerStyle}>{children}</View>
+        <View style={[styles.content, edgeInsets]}>{children}</View>
       </ScrollView>
     );
   };

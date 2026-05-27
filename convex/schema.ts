@@ -16,7 +16,7 @@ export default defineSchema({
     intention: v.optional(v.string()),
     city: v.string(),
     createdAt: v.number(),
-    hasSeenWelcome: v.boolean(),
+    hasSeenWelcome: v.optional(v.boolean()),
     isTestPassed: v.boolean(),
 
     // --- 2. ВІЗУАЛ ТА ОПИС (Те, що бачать першим) ---
@@ -96,4 +96,19 @@ export default defineSchema({
     ),
     updatedAt: v.optional(v.number()),
   }).index("by_email", ["email"]),
+
+  messages: defineTable({
+    chatId: v.string(), // ID кімнати чату (або комбінація ID двох користувачів)
+    senderId: v.string(), // ID відправника повідомлення
+    text: v.string(), // Текст повідомлення
+    timestamp: v.number(), // Час відправки
+    isDeleted: v.boolean(), // Прапорець для м'якого видалення (Soft Delete)
+    reactions: v.array(
+      // Масив об'єктів для збереження емодзі
+      v.object({
+        userId: v.string(), // Хто поставив реакцію
+        emoji: v.string(), // Який саме емодзі
+      }),
+    ),
+  }).index("by_chatId", ["chatId"]),
 });

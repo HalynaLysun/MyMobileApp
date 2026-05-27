@@ -5,6 +5,7 @@ import { Colors } from "@/constants/Colors";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
 import { useAuth } from "@/context/AuthContext";
 import ScreenContainer from "@/components/ScreenContainer";
+import AppButton from "@/components/AppButton";
 
 interface MoreFilters {
   distance: number;
@@ -24,13 +25,13 @@ interface MoreFilters {
 
 export default function MoreFiltersScreen() {
   const router = useRouter();
-  const { user, updatePreferences } = useAuth();
+  const { user, updatePreferences, isLoading } = useAuth();
 
   // Ініціалізуємо стан усіма полями з твого інтерфейсу
   const [filters, setFilters] = useState<MoreFilters>({
-    distance: user?.filters?.distance ?? 10,
-    minHeight: user?.filters?.minHeight ?? 160,
-    maxHeight: user?.filters?.maxHeight ?? 210,
+    distance: user?.filters?.distance ?? 10000,
+    minHeight: user?.filters?.minHeight ?? 150,
+    maxHeight: user?.filters?.maxHeight ?? 220,
     verifiedOnly: user?.filters?.verifiedOnly ?? false,
     onlyNew: user?.filters?.onlyNew ?? false,
     smoking: user?.filters?.smoking,
@@ -69,8 +70,8 @@ export default function MoreFiltersScreen() {
             values={[filters.distance]}
             sliderLength={280}
             onValuesChange={(v) => updateField({ distance: v[0] })}
-            min={10}
-            max={100}
+            min={5}
+            max={200}
             step={1}
             trackStyle={styles.track}
             selectedStyle={{ backgroundColor: Colors.secondary }}
@@ -90,12 +91,12 @@ export default function MoreFiltersScreen() {
         </View>
         <View style={styles.sliderWrapper}>
           <MultiSlider
-            values={[filters.minHeight || 150, filters.maxHeight || 210]}
+            values={[filters.minHeight || 150, filters.maxHeight || 220]}
             sliderLength={280}
             onValuesChange={(v) => {
               updateField({ minHeight: v[0], maxHeight: v[1] });
             }}
-            min={140}
+            min={150}
             max={220}
             step={1}
             trackStyle={styles.track}
@@ -151,9 +152,11 @@ export default function MoreFiltersScreen() {
         </View>
       </View>
 
-      <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-        <Text style={styles.saveButtonText}>Save and Apply</Text>
-      </TouchableOpacity>
+      <AppButton
+        title="Save and Apply"
+        onPress={handleSave}
+        loading={isLoading}
+      />
     </ScreenContainer>
   );
 }

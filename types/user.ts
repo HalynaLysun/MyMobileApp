@@ -38,7 +38,8 @@ export interface UserFilters {
   zodiac?: string[];
   orientation?: string[];
   relationshipStatus?: string[];
-  personalityType?: string[]; // Додано згідно з новою схемою
+  personalityType?: string[];
+  hasSeenWelcome?: boolean; // Додано згідно з новою схемою
 }
 
 export interface UserDetails {
@@ -62,13 +63,13 @@ export interface UserDetails {
 
 export const DEFAULT_USER_PREFERENCES: UserFilters = {
   gender: "all",
-  distance: 10,
+  distance: 5,
   ageRange: [24, 38],
   intention: "chatting",
   verifiedOnly: false,
   onlyNew: false,
   minHeight: 150, // додай значення за замовчуванням
-  maxHeight: 200,
+  maxHeight: 220,
 };
 
 export interface UserProfile {
