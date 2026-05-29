@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Modal,
+  TextInputKeyPressEvent,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
@@ -56,6 +57,25 @@ export default function ChatScreen() {
     }
   };
 
+  const handleKeyPress = (e: TextInputKeyPressEvent) => {
+    const isEnter = e.nativeEvent.key === "Enter";
+    const isCtrl =
+      "ctrlKey" in e.nativeEvent
+        ? (e.nativeEvent as unknown as KeyboardEvent).ctrlKey
+        : false;
+
+    if (isEnter) {
+      if (isCtrl) {
+        // Якщо Ctrl + Enter — додаємо символ переносу рядка
+        setInputText((prev) => prev + "\n");
+      } else {
+        // Якщо просто Enter — скасовуємо стандартний перенос і відправляємо
+        e.preventDefault();
+        handleSend();
+      }
+    }
+  };
+
   const handleLongPressMessage = (message: Message) => {
     setSelectedMessage(message);
     setMenuVisible(true);
@@ -94,7 +114,7 @@ export default function ChatScreen() {
   };
 
   const renderItem = ({ item }: { item: Message }) => {
-    const isMe = item.senderId === user?._id;
+    const isMe = String(item.senderId) === String(user?._id);
 
     return (
       <TouchableOpacity
@@ -172,6 +192,8 @@ export default function ChatScreen() {
             value={inputText}
             onChangeText={setInputText}
             multiline
+            onKeyPress={handleKeyPress} // 👈 ДОДАНО ОБРОБНИК КЛАВІШ
+            submitBehavior="blurAndSubmit"
           />
           <TouchableOpacity onPress={handleSend} style={styles.sendButton}>
             <Ionicons name="send" size={20} color="white" />
@@ -250,7 +272,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 4,
   },
   theirBubble: {
-    backgroundColor: Colors.inputBack,
+    backgroundColor: Colors.white,
     borderBottomLeftRadius: 4,
     borderWidth: 1,
     borderColor: Colors.inputBorder,

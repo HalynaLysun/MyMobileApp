@@ -63,7 +63,7 @@ export default function FiltersScreen() {
     user?._id ? { _id: user._id } : "skip",
   );
 
-  const hasCompletedTest = userData?.hasSeenWelcome === true;
+  const hasCompletedTest = userData?.isTestPassed === true;
 
   useEffect(() => {
     // 1. Перевіряємо, чи прийшли дані і чи ми їх ще не завантажували

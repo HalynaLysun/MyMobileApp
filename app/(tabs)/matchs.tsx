@@ -168,7 +168,7 @@ export default function MatchesScreen() {
         }
         ListEmptyComponent={
           <Text style={styles.emptyText}>
-            No matches found for this filter.
+            No good matches found for this filter.
           </Text>
         }
         ListFooterComponent={
