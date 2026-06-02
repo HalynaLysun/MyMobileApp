@@ -91,11 +91,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsSaving(true);
 
       const { hasSeenWelcome, ...cleanFilters } = newPrefs as any;
+
+      const finalFilters = {
+        ...(user.filters || DEFAULT_USER_PREFERENCES),
+        ...cleanFilters,
+      };
       // 2. Відправляємо в базу даних
       // Тепер кожна зміна фільтрів буде автоматично летіти на сервер
       await convexUpdateProfile({
         _id: user._id as Id<"users">,
-        filters: cleanFilters,
+        filters: finalFilters,
       });
       console.log("Preferences synced with DB");
     } catch (error) {
@@ -125,8 +130,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // 2. ВИКЛИК ТВОЄЇ МУТАЦІЇ
     try {
       setIsSaving(true);
-      const { _id, firstName, bio, photoUrl, details } = args;
-      await convexUpdateProfile({ _id, firstName, bio, photoUrl, details });
+      const { _id, firstName, bio, photoUrl, details, isTestPassed } = args;
+      await convexUpdateProfile({
+        _id,
+        firstName,
+        bio,
+        photoUrl,
+        details,
+        isTestPassed,
+      });
     } catch (e) {
       console.error("Помилка синхронізації з базою", e);
       // Тут можна додати логіку відкату до старих даних, якщо база видала помилку

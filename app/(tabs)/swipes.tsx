@@ -24,24 +24,16 @@ const Swipes = () => {
 
   const users = useQuery(
     api.users.getRandomUsers,
-    user?._id
-      ? {
-          currentUserId: user?._id as Id<"users">,
-          filters: {
-            gender: user?.gender || "all",
-            // Передаємо масив цілком. Якщо його нема — ставимо дефолт [18, 100]
-            ageRange: user?.ageRange || [18, 100],
-            intention: user?.intention || "chatting",
-          },
-        }
-      : "skip",
+    user?._id ? { currentUserId: user?._id as Id<"users"> } : "skip",
   );
+
+  const filtersString = JSON.stringify(user?.filters);
 
   useEffect(() => {
     // Кожного разу, коли список користувачів змінюється (наприклад, через фільтри),
     // ми повертаємося до першої картки.
     setCurrentIndex(0);
-  }, [users?.length, user?.gender, user?.intention, user?.ageRange]);
+  }, [users?.length, filtersString]);
 
   if (users === undefined) {
     return (

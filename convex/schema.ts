@@ -17,7 +17,7 @@ export default defineSchema({
     city: v.string(),
     createdAt: v.number(),
     hasSeenWelcome: v.optional(v.boolean()),
-    isTestPassed: v.boolean(),
+    isTestPassed: v.optional(v.boolean()),
 
     // --- 2. ВІЗУАЛ ТА ОПИС (Те, що бачать першим) ---
 

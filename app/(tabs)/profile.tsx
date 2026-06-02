@@ -1,9 +1,11 @@
-import { Alert, Platform, Text } from "react-native";
+import { Alert, Platform, Text, View, StyleSheet } from "react-native";
 import { useAuth } from "@/context/AuthContext"; // Імпортуємо наш хук
 import { useRouter } from "expo-router";
 import AppButton from "@/components/AppButton";
 import ScreenContainer from "@/components/ScreenContainer";
 import UserProfileContent from "@/components/UserProfileContent";
+import { Ionicons } from "@expo/vector-icons";
+import { Colors } from "@/constants/Colors";
 
 export default function ProfileScreen() {
   const { logout, user } = useAuth();
@@ -50,6 +52,40 @@ export default function ProfileScreen() {
     <ScreenContainer>
       {/* {user && <Text style={styles.email}>Ви залогінені як: {user.email}</Text>} */}
       <UserProfileContent user={user} />
+      <View style={styles.detailsContainer}>
+        <Text style={styles.detailsTitle}>My Details</Text>
+
+        <View style={styles.infoGrid}>
+          {/* Зріст */}
+          <View style={styles.infoBadge}>
+            <Ionicons name="resize-outline" size={16} color={Colors.primary} />
+            <Text style={styles.infoText}>
+              Height: {user.details?.height ? `${user.details.height} cm` : "—"}
+            </Text>
+          </View>
+
+          {/* Зодіак */}
+          <View style={styles.infoBadge}>
+            <Ionicons name="moon-outline" size={16} color={Colors.primary} />
+            <Text style={styles.infoText}>
+              Zodiac: {user.details?.zodiac || "—"}
+            </Text>
+          </View>
+
+          {/* Статус куріння */}
+          <View style={styles.infoBadge}>
+            <Ionicons name="flame-outline" size={16} color={Colors.primary} />
+            <Text style={styles.infoText}>
+              Smoking:{" "}
+              {user.details?.smoking === "smoker"
+                ? "Smoker"
+                : user.details?.smoking === "non-smoker"
+                  ? "Non-smoker"
+                  : "—"}
+            </Text>
+          </View>
+        </View>
+      </View>
       <AppButton
         title="Edit Profile"
         onPress={() => router.push("/edit-profile")}
@@ -71,7 +107,7 @@ export default function ProfileScreen() {
             //       ],
             //     );
             //   } else {
-            router.push("/questions")
+            router.push("/questions?from=profile")
           //   }
           // }
         }
@@ -80,3 +116,44 @@ export default function ProfileScreen() {
     </ScreenContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  detailsContainer: {
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 16,
+    marginVertical: 20,
+    borderWidth: 1,
+    borderColor: Colors.inputBorder,
+  },
+  detailsTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: Colors.textMain,
+    marginBottom: 12,
+  },
+  infoGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  infoBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.inputBack,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.inputBorder,
+  },
+  infoText: {
+    fontSize: 14,
+    color: Colors.textMain,
+    marginLeft: 6,
+    fontWeight: "500",
+  },
+  buttonGroup: {
+    gap: 5,
+  },
+});

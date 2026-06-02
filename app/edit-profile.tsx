@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -16,6 +16,7 @@ import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { INTENTIONS } from "@/constants/IntentionOptions";
 import * as ImagePicker from "expo-image-picker";
+import { Intention } from "@/types/user";
 
 export default function EditProfileScreen() {
   const { user, updatePreferences, updateUserProfile, isSaving } = useAuth();
@@ -23,6 +24,8 @@ export default function EditProfileScreen() {
 
   // Стейт для редагування
   const [firstName, setFirstName] = useState(user?.firstName || "");
+  const [age, setAge] = useState(user?.age ? user.age.toString() : "");
+  const [city, setCity] = useState(user?.city || "");
   const [bio, setBio] = useState(user?.bio || "");
   const [intention, setIntention] = useState(
     user?.details?.intention || "chatting",
@@ -34,6 +37,19 @@ export default function EditProfileScreen() {
   const [photoUrl, setPhotoUrl] = useState<string | null>(
     user?.photoUrl || null,
   );
+  const [smoking, setSmoking] = useState(
+    user?.details?.smoking || "non-smoker",
+  );
+
+  useEffect(() => {
+    if (user?.details?.intention) {
+      setIntention(user.details.intention);
+    }
+
+    if (user?.details?.smoking) {
+      setSmoking(user.details.smoking);
+    }
+  }, [user?.details?.intention, user?.details?.smoking]);
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -43,15 +59,29 @@ export default function EditProfileScreen() {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: "images",
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.7,
     });
 
-    if (!result.canceled) {
+    if (!result.canceled && result.assets && result.assets.length > 0) {
       setPhotoUrl(result.assets[0].uri);
     }
+  };
+
+  const handleIntentionPress = (id: string) => {
+    if (id === "serious relationship") {
+      // 👈 Перевіряємо: якщо тест вже ПРАЙДЕНИЙ, просто міняємо стейт, на тест йти НЕ ТРЕБА!
+      if (user?.isTestPassed) {
+        setIntention("serious relationship");
+      } else {
+        // Якщо тест ще не проходили — відправляємо проходити
+        router.push("/questions?from=edit-profile");
+      }
+      return;
+    }
+    setIntention(id as Intention);
   };
 
   const handleSave = async () => {
@@ -60,11 +90,18 @@ export default function EditProfileScreen() {
       return;
     }
 
+    const parsedAge = parseInt(age);
+    if (age && (isNaN(parsedAge) || parsedAge < 18 || parsedAge > 100)) {
+      alert("Please enter a valid age (18+)");
+      return;
+    }
+
     try {
       const profileDetails = {
         ...(height ? { height: parseInt(height) } : {}),
         zodiac: zodiac || "",
         intention: intention,
+        smoking: smoking,
         // Сюди в майбутньому просто допишеш smoking: "no" і т.д.
         // І тобі НЕ треба буде міняти users.ts!
       };
@@ -72,6 +109,8 @@ export default function EditProfileScreen() {
         _id: user._id,
         firstName,
         bio,
+        age: age ? parsedAge : undefined,
+        city: city || undefined,
         photoUrl: photoUrl || undefined,
         details: profileDetails,
 
@@ -131,6 +170,30 @@ export default function EditProfileScreen() {
           />
         </View>
 
+        <View style={styles.rowInputs}>
+          <View style={[styles.inputGroup, { flex: 1 }]}>
+            <Text style={styles.label}>Age</Text>
+            <TextInput
+              style={styles.input}
+              value={age}
+              onChangeText={setAge}
+              placeholder="25"
+              keyboardType="numeric"
+              maxLength={3}
+            />
+          </View>
+          <View style={{ width: 15 }} />
+          <View style={[styles.inputGroup, { flex: 2 }]}>
+            <Text style={styles.label}>City</Text>
+            <TextInput
+              style={styles.input}
+              value={city}
+              onChangeText={setCity}
+              placeholder="Kyiv"
+            />
+          </View>
+        </View>
+
         {/* Intention Selection */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Dating Goal</Text>
@@ -142,7 +205,7 @@ export default function EditProfileScreen() {
                   styles.intentionCard,
                   intention === item._id && styles.intentionCardActive,
                 ]}
-                onPress={() => setIntention(item._id)}
+                onPress={() => handleIntentionPress(item._id)}
               >
                 <Ionicons
                   name={item.filterIcon}
@@ -197,6 +260,57 @@ export default function EditProfileScreen() {
               onChangeText={setZodiac}
               placeholder="Leo"
             />
+          </View>
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Smoking</Text>
+          <View style={styles.selectorGrid}>
+            <TouchableOpacity
+              style={[
+                styles.selectorCard,
+                smoking === "non-smoker" && styles.selectorCardActive,
+              ]}
+              onPress={() => setSmoking("non-smoker")}
+            >
+              <Ionicons
+                name="leaf"
+                size={20}
+                color={
+                  smoking === "non-smoker" ? Colors.primary : Colors.secondary
+                }
+              />
+              <Text
+                style={[
+                  styles.selectorLabel,
+                  smoking === "non-smoker" && styles.selectorLabelActive,
+                ]}
+              >
+                Non-smoker
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.selectorCard,
+                smoking === "smoker" && styles.selectorCardActive,
+              ]}
+              onPress={() => setSmoking("smoker")}
+            >
+              <Ionicons
+                name="flame"
+                size={20}
+                color={smoking === "smoker" ? Colors.primary : Colors.secondary}
+              />
+              <Text
+                style={[
+                  styles.selectorLabel,
+                  smoking === "smoker" && styles.selectorLabelActive,
+                ]}
+              >
+                Smoker
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -301,6 +415,29 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   intentionLabelActive: { color: Colors.primary, fontWeight: "700" },
+  selectorGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  selectorCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "white",
+    borderWidth: 1,
+    borderColor: Colors.inputBorder,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    width: "48%",
+  },
+  selectorCardActive: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.inputBack,
+  },
+  selectorLabel: {
+    fontSize: 13,
+    color: Colors.textLight,
+    marginLeft: 8,
+    fontWeight: "500",
+  },
+  selectorLabelActive: { color: Colors.primary, fontWeight: "700" },
   cancelButton: { marginTop: 15, alignItems: "center", padding: 10 },
   cancelText: { color: Colors.textMain, fontSize: 16, fontWeight: "600" },
 });

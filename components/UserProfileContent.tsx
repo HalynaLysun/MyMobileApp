@@ -15,18 +15,30 @@ export default function UserProfileContent({ user }: UserProfileContentProps) {
   const intentionData =
     INTENTIONS.find((i) => i._id === user?.details?.intention) || INTENTIONS[2]; // дефолт chatting
 
+  const imageSource = user?.photoUrl
+    ? { uri: user.photoUrl }
+    : {
+        uri: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.firstName || user?.email}`,
+      };
+
   return (
     <View style={styles.container}>
       {/* Avatar & Basic Info */}
       <View style={styles.avatarContainer}>
-        <Image
-          source={{
-            uri: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.firstName || user?.email}`,
-          }}
-          style={styles.avatar}
-        />
-        <Text style={styles.name}>{user?.firstName || "New Member"}</Text>
+        <Image source={imageSource} style={styles.avatar} />
+        {/* <Text style={styles.name}>{user?.firstName || "New Member"}</Text> */}
+        <Text style={styles.name}>
+          {user?.firstName || "New Member"}
+          {user?.age ? `, ${user.age}` : ""}
+        </Text>
 
+        {/* 🌟 НОВЕ ПОЛЕ: Відображаємо місто під іменем */}
+        {user?.city && (
+          <View style={styles.cityRow}>
+            <Ionicons name="location" size={14} color={Colors.textLight} />
+            <Text style={styles.cityText}>{user.city}</Text>
+          </View>
+        )}
         {user?.isTestPassed && (
           <View style={styles.verifiedBadge}>
             <Ionicons
@@ -94,6 +106,17 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     marginTop: 12,
     color: Colors.textMain,
+  },
+  cityRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+    gap: 4,
+  },
+  cityText: {
+    fontSize: 15,
+    color: Colors.textLight,
+    fontWeight: "500",
   },
   verifiedBadge: {
     flexDirection: "row",

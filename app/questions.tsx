@@ -7,7 +7,7 @@ import {
   Alert,
   ScrollView,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@/context/AuthContext";
@@ -18,7 +18,8 @@ import { Colors } from "@/constants/Colors";
 
 export default function QuestionsScreen() {
   const router = useRouter();
-  const { user, updatePreferences } = useAuth();
+  const { from } = useLocalSearchParams();
+  const { user, updatePreferences, updateUserProfile } = useAuth();
 
   const saveResults = useMutation(api.questions.saveTestResults);
 
@@ -84,20 +85,32 @@ export default function QuestionsScreen() {
           ageRange: [18, 100],
         });
 
+        await updateUserProfile({
+          _id: user._id,
+          isTestPassed: true, // 👈 Передаємо true
+        });
+
+        console.log("=== Перевірка маршруту з from ===", from);
+
+        // 1. Повернення на головну сторінку профілю
+        if (from === "profile") {
+          console.log("Navigating back to main profile...");
+          router.replace("/profile"); // 👈 Або шлях, який веде на вкладку профілю
+          return;
+        }
+
+        // 2. Повернення на сторінку редагування профілю
+        if (from === "edit-profile") {
+          console.log("Navigating back to edit profile...");
+          router.back(); // Працює як нативний back, повертаючи на попередній екран редагування
+          return;
+        }
+
+        // 3. Запасний варіант (якщо прийшли з реєстрації чи фільтрів)
         console.log("Navigating to home...");
-        // Alert.alert(
-        //   "Success",
-        //   "Test passed! Serious matching is now available.",
-        //   [
-        //     {
-        //       text: "Continue",
-        // onPress: () =>
-
         router.replace("/");
-
-        //     },
-        //   ],
-        // );
+        return;
+        // Початкова поведінка (на головну/фільтри)
       } catch (error) {
         setIsSubmitting(false);
         alert("Could not save results. Please try again.");

@@ -9,7 +9,7 @@ import MultiSlider from "@ptomasroos/react-native-multi-slider";
 import { useRouter } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 import { useAuth } from "@/context/AuthContext";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useEffect, useState } from "react";
 import { DEFAULT_USER_PREFERENCES, Intention } from "@/types/user";
@@ -32,7 +32,7 @@ export default function FiltersScreen() {
 
   // const { newUser } = useLocalSearchParams();
 
-  const update = useMutation(api.users.updateFilters);
+  // const update = useMutation(api.users.updateFilters);
 
   const handleSave = async () => {
     if (!user) {
@@ -41,15 +41,11 @@ export default function FiltersScreen() {
     }
 
     try {
-      await update({
-        _id: user._id,
-        // Всі налаштування мають бути всередині об'єкта filters
-        filters: {
-          gender: gender,
-          distance: distance,
-          ageRange: ageRange,
-          intention: intention,
-        },
+      await updatePreferences({
+        gender: gender,
+        distance: distance,
+        ageRange: ageRange,
+        intention: intention,
       });
     } catch (error) {
       alert("Error saving settings");

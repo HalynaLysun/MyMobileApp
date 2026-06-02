@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, Switch, TouchableOpacity, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { Colors } from "@/constants/Colors";
@@ -43,6 +43,26 @@ export default function MoreFiltersScreen() {
     relationshipStatus: user?.filters?.relationshipStatus ?? [],
     personalityType: user?.filters?.personalityType ?? [],
   });
+
+  useEffect(() => {
+    if (user?.filters) {
+      setFilters({
+        distance: user.filters.distance ?? 100,
+        minHeight: user.filters.minHeight ?? 150,
+        maxHeight: user.filters.maxHeight ?? 220,
+        verifiedOnly: user.filters.verifiedOnly ?? false,
+        onlyNew: user.filters.onlyNew ?? false,
+        smoking: user.filters.smoking,
+        alcohol: user.filters.alcohol,
+        wantChildren: user.filters.wantChildren,
+        religion: user.filters.religion ?? [],
+        zodiac: user.filters.zodiac ?? [],
+        orientation: user.filters.orientation ?? [],
+        relationshipStatus: user.filters.relationshipStatus ?? [],
+        personalityType: user.filters.personalityType ?? [],
+      });
+    }
+  }, [user]);
 
   const updateField = (partialFilters: Partial<MoreFilters>) => {
     setFilters((prev) => ({ ...prev, ...partialFilters }));

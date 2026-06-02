@@ -80,30 +80,30 @@ export const getUser = query({
 export const getRandomUsers = query({
   args: {
     currentUserId: v.id("users"),
-    filters: v.object({
-      gender: v.union(v.literal("male"), v.literal("female"), v.literal("all")), // "Male", "Female"
-      // Наприклад: 10
-      ageRange: v.array(v.number()),
-      intention: v.union(
-        v.literal("chatting"),
-        v.literal("serious relationship"),
-        v.literal("casual dating"),
-        v.literal("friendship"),
-      ),
-      distance: v.optional(v.number()),
-      minHeight: v.optional(v.number()),
-      maxHeight: v.optional(v.number()),
-      verifiedOnly: v.optional(v.boolean()),
-      orientation: v.optional(v.array(v.string())),
-      relationshipStatus: v.optional(v.array(v.string())),
-      wantChildren: v.optional(v.string()),
-      smoking: v.optional(v.string()),
-      alcohol: v.optional(v.string()),
-      personalityType: v.optional(v.array(v.string())),
-      religion: v.optional(v.array(v.string())),
-      zodiac: v.optional(v.array(v.string())),
-      onlyNew: v.optional(v.boolean()),
-    }),
+    // filters: v.object({
+    //   gender: v.union(v.literal("male"), v.literal("female"), v.literal("all")), // "Male", "Female"
+    //   // Наприклад: 10
+    //   ageRange: v.array(v.number()),
+    //   intention: v.union(
+    //     v.literal("chatting"),
+    //     v.literal("serious relationship"),
+    //     v.literal("casual dating"),
+    //     v.literal("friendship"),
+    //   ),
+    //   distance: v.optional(v.number()),
+    //   minHeight: v.optional(v.number()),
+    //   maxHeight: v.optional(v.number()),
+    //   verifiedOnly: v.optional(v.boolean()),
+    //   orientation: v.optional(v.array(v.string())),
+    //   relationshipStatus: v.optional(v.array(v.string())),
+    //   wantChildren: v.optional(v.string()),
+    //   smoking: v.optional(v.string()),
+    //   alcohol: v.optional(v.string()),
+    //   personalityType: v.optional(v.array(v.string())),
+    //   religion: v.optional(v.array(v.string())),
+    //   zodiac: v.optional(v.array(v.string())),
+    //   onlyNew: v.optional(v.boolean()),
+    // }),
   },
   handler: async (ctx, { currentUserId }) => {
     const currentUser = await ctx.db.get(currentUserId);
@@ -128,6 +128,35 @@ export const getRandomUsers = query({
           conditions.push(q.eq(q.field("userGender"), filters.gender));
         }
 
+        if (filters.intention) {
+          conditions.push(
+            q.or(
+              q.eq(q.field("details.intention"), undefined), // Пропускаємо, якщо не заповнено
+              q.eq(q.field("details.intention"), filters.intention), // Або якщо збігається
+            ),
+          );
+        }
+
+        // ПРИКЛАД фільтрації по вкладеним деталям (наприклад, зріст)
+        if (filters.minHeight) {
+          conditions.push(
+            q.or(
+              q.eq(q.field("details.height"), undefined),
+              q.gte(q.field("details.height"), filters.minHeight),
+            ),
+          );
+        }
+
+        // 7. МАКСИМАЛЬНИЙ ЗРІСТ
+        if (filters.maxHeight) {
+          conditions.push(
+            q.or(
+              q.eq(q.field("details.height"), undefined),
+              q.lte(q.field("details.height"), filters.maxHeight),
+            ),
+          );
+        }
+
         // Фільтр по верифікації
         if (filters.verifiedOnly) {
           conditions.push(q.eq(q.field("isVerified"), true));
@@ -138,9 +167,14 @@ export const getRandomUsers = query({
           conditions.push(q.gt(q.field("createdAt"), now - SEVEN_DAYS_MS));
         }
 
-        // ПРИКЛАД фільтрації по вкладеним деталям (наприклад, зріст)
-        if (filters.minHeight) {
-          conditions.push(q.gte(q.field("details.height"), filters.minHeight));
+        // 8. ПАЛІННЯ
+        if (filters.smoking) {
+          conditions.push(
+            q.or(
+              q.eq(q.field("details.smoking"), undefined),
+              q.eq(q.field("details.smoking"), filters.smoking),
+            ),
+          );
         }
 
         return q.and(...conditions);
@@ -167,9 +201,10 @@ export const updateProfile = mutation({
     photoUrl: v.optional(v.string()),
     filters: v.optional(v.any()),
     details: v.optional(v.any()),
+    isTestPassed: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const { _id, filters, details, ...fields } = args;
+    const { _id, filters, details, isTestPassed, ...fields } = args;
 
     const user = await ctx.db.get(_id);
     if (!user) throw new Error("User not found");
